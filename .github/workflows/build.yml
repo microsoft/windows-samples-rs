@@ -10,10 +10,34 @@ env:
   RUSTFLAGS: -Dwarnings
 
 jobs:
+  gen_matrix:
+    name: Generate crate matrix
+    runs-on: windows-latest 
+    outputs:
+      crate: ${{ steps.gen_matrix.outputs.crate }}
+    steps:
+    - uses: actions/checkout@v2
+    - id: gen_matrix
+      name: Enumerate crates
+      shell: pwsh
+      run: |
+        $crates = Get-ChildItem -Directory | ForEach-Object {
+          $toml_path = [IO.Path]::Combine($_, "Cargo.toml");
+          
+          if( (Test-Path $toml_path) -And (Get-Content($toml_path) | ForEach-Object {
+            $_ -imatch "[workspace]" })
+          ) { $_.Name }
+        } | ConvertTo-Json -Compress
+        "::set-output name=crate::$crates"
+
   test:
     runs-on: ${{ matrix.os }}
+    needs:
+      - gen_matrix
+      - cargo_fmt
     strategy:
       matrix:
+        crate: ${{fromJson(needs.gen_matrix.outputs.crate)}}
         include:
         - os: windows-latest
           rust: stable
@@ -36,35 +60,18 @@ jobs:
     - run: rustup target add ${{ matrix.other }}
 
     - name: windows build (root workspace)
-      shell: pwsh
-      run: |
-        Get-ChildItem -Directory | ForEach-Object {
-          $toml_path = [IO.Path]::Combine($_, "Cargo.toml");
-          
-          if( (Test-Path $toml_path) -And (Get-Content($toml_path) | ForEach-Object {
-            $_ -imatch "[workspace]" })
-          ) { $_ }
-        } | ForEach-Object {
-          Push-Location $_;
-          Write-Output "Building $(Get-Location)";
-
-          cargo test --all --target ${{ matrix.other }};
-
-          Pop-Location;
-        }
+      working-directory: ${{ matrix.crate }}
+      run: cargo test --workspace --target ${{ matrix.other }};
 
   cargo_fmt:
-    runs-on: windows-latest
     name: Check cargo formatting
+    runs-on: windows-latest
+    needs: gen_matrix
+    strategy:
+      matrix:
+        crate: ${{fromJson(needs.gen_matrix.outputs.crate)}}
     steps:
     - uses: actions/checkout@v2
     - name: Run cargo fmt
-      run: cargo fmt --all -- --check
-
-  cargo_doc:
-    runs-on: windows-latest
-    name: Check cargo docs
-    steps:
-    - uses: actions/checkout@v2
-    - name: Run cargo doc
-      run: cargo doc --no-deps --workspace
+      working-directory: ${{ matrix.crate }}
+      run: cargo fmt -- --check
