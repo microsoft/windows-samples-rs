@@ -35,8 +35,23 @@ jobs:
     - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
     - run: rustup target add ${{ matrix.other }}
 
-    - name: windows build
-      run: cargo test --all --target ${{ matrix.other }}
+    - name: windows build (root workspace)
+      shell: pwsh
+      run: |
+        Get-ChildItem -Directory | ForEach-Object {
+          $toml_path = [IO.Path]::Combine($_, "Cargo.toml");
+          
+          if( (Test-Path $toml_path) -And (Get-Content($toml_path) | ForEach-Object {
+            $_ -imatch "[workspace]" })
+          ) { $_ }
+        } | ForEach-Object {
+          Push-Location $_;
+          Write-Output "Building $(Get-Location)";
+
+          cargo test --all --target ${{ matrix.other }};
+
+          Pop-Location;
+        }
 
   cargo_fmt:
     runs-on: windows-latest
