@@ -35,8 +35,9 @@ jobs:
     - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
     - run: rustup target add ${{ matrix.other }}
 
-    - name: windows build
-      run: cargo test --all --target ${{ matrix.other }}
+    - name: windows build (root workspace)
+      working-directory: ./
+      run: cargo test --workspace --target ${{ matrix.other }}
 
   cargo_fmt:
     runs-on: windows-latest
