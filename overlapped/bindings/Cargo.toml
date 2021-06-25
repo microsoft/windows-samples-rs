@@ -1,5 +1,5 @@
 [package]
-name = "bindings"
+name = "overlapped_bindings"
 version = "0.0.0"
 edition = "2018"
 

@@ -1,9 +1,9 @@
 [package]
-name = "sample"
+name = "ocr"
 version = "0.0.0"
 edition = "2018"
 
 [dependencies]
 windows = "0.13.0"
-bindings = { path = "bindings" }
+bindings = { package = "ocr_bindings", path = "bindings" }
 futures = "0.3.5"

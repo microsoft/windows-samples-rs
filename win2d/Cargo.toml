@@ -1,7 +1,7 @@
 [package]
-name = "sample"
+name = "win2d"
 version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-bindings = { path = "bindings" }
+bindings = { package = "win2d_bindings", path = "bindings" }

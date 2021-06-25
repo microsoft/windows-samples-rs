@@ -1,0 +1,13 @@
+[workspace]
+
+members = [
+    "*/"
+]
+
+exclude = [
+    ".git",
+    ".github",
+    ".windows",
+    "docs",
+    "windows_app_sdk"
+]

@@ -1,5 +1,5 @@
 [package]
-name = "bindings"
+name = "message_box_bindings"
 version = "0.0.0"
 edition = "2018"
 

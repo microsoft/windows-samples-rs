@@ -1,5 +1,5 @@
 [package]
-name = "bindings"
+name = "memory_buffer_bindings"
 version = "0.0.0"
 edition = "2018"
 

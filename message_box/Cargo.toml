@@ -1,7 +1,7 @@
 [package]
-name = "sample"
+name = "message_box"
 version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-bindings = { path = "bindings" }
+bindings = { package = "message_box_bindings", path = "bindings" }

@@ -1,8 +1,8 @@
 [package]
-name = "sample"
+name = "rss"
 version = "0.0.0"
 edition = "2018"
 
 [dependencies]
 windows = "0.13.0"
-bindings = { path = "bindings" }
+bindings = { package = "rss_bindings", path = "bindings" }

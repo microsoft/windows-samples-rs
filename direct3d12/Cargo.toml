@@ -1,9 +1,9 @@
 [package]
-name = "sample"
+name = "direct3d12"
 version = "0.0.0"
 edition = "2018"
 
 [dependencies]
 windows = "0.13.0"
-bindings = { path = "bindings" }
+bindings = { package = "direct3d12_bindings", path = "bindings" }
 array-init = "2.0.0"
