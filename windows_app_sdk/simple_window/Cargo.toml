@@ -1,0 +1,10 @@
+[package]
+name = "simple_window"
+version = "0.0.0"
+edition = "2018"
+publish = false
+
+[dependencies]
+bindings = { package = "simple_window_bindings", path = "bindings" }
+windows = "0.12.0"
+windows-app = { git = "https://github.com/microsoft/windows-app-rs" }
