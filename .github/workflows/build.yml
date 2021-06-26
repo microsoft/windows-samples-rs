@@ -21,13 +21,14 @@ jobs:
       name: Enumerate crates
       shell: pwsh
       run: |
-        $crates = Get-ChildItem -Directory | ForEach-Object {
-          $toml_path = [IO.Path]::Combine($_, "Cargo.toml");
-          
-          if( (Test-Path $toml_path) -And (Get-Content($toml_path) | ForEach-Object {
-            $_ -imatch "[workspace]" })
-          ) { $_.Name }
-        } | ConvertTo-Json -Compress
+        function Get-BuildableCratePaths {
+            Get-ChildItem -Directory | ForEach-Object {
+                if(Test-Path ([IO.Path]::Combine($_, "Cargo.toml"))) {
+                    $_.Name
+                }
+            }
+        }
+        $crates = Get-BuildableCratePaths | ConvertTo-Json -Compress
         "::set-output name=crate::$crates"
 
   test:
