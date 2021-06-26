@@ -31,6 +31,7 @@ jobs:
         "::set-output name=crate::$crates"
 
   test:
+    name: Build and test crate
     runs-on: ${{ matrix.os }}
     needs:
       - gen_matrix
