@@ -1,4 +1,4 @@
-## Rust for Windows Samples > Windows App SDK
+## Rust language samples for Windows App SDK
 
 ### Skeleton
 Demonstrates the bare minimum needed to ready an app to use the Windows App SDK and all its components.
