@@ -1,4 +1,4 @@
-//#![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 
 use std::mem::MaybeUninit;
 
@@ -9,7 +9,7 @@ use bindings::Windows::{
         System::{LibraryLoader::*, WinRT::*},
         UI::{HiDpi::*, WindowsAndMessaging::*},
     },
-    UI::Xaml::{*, Controls::*, Hosting::*},
+    UI::Xaml::{Controls::*, Hosting::*, *},
 };
 use windows::*;
 
@@ -17,7 +17,7 @@ fn paint<T>(hwnd: HWND, f: impl FnOnce(HDC, &mut PAINTSTRUCT) -> T) -> T {
     let (hdc, mut paint_struct) = unsafe {
         let mut paint_struct = MaybeUninit::uninit();
         let hdc = BeginPaint(hwnd, paint_struct.as_mut_ptr());
-        assert_ne!(hdc, HDC(0));
+        assert_ne!(hdc.0, 0);
         (hdc, paint_struct.assume_init())
     };
     let result = f(hdc, &mut paint_struct);
@@ -37,7 +37,7 @@ impl Window {
     fn new(hwnd: HWND) -> Result<Box<Self>> {
         let dwxs = DesktopWindowXamlSource::new()?;
         let dwxs_native: IDesktopWindowXamlSourceNative2 = dwxs.cast()?;
-        unsafe { dwxs_native.AttachToWindow(hwnd) }.ok()?;
+        unsafe { dwxs_native.AttachToWindow(hwnd) }?;
 
         let island_content = TextBox::new()?;
         island_content.SetText("A XAML island")?;
@@ -45,12 +45,15 @@ impl Window {
         island_content.SetTextWrapping(TextWrapping::Wrap)?;
         dwxs.SetContent(island_content.clone())?;
 
-        let island_hwnd = unsafe {
-            let mut result = MaybeUninit::uninit();
-            dwxs_native
-                .get_WindowHandle(result.as_mut_ptr())
-                .and_then(|| result.assume_init())
-        }?;
+        let island_hwnd = unsafe { dwxs_native.get_WindowHandle() }?;
+
+        // According to docs.microsoft.com/en-us/windows/apps/desktop/
+        // /modernize/host-standard-control-with-xaml-islands-cpp#
+        // use-the-xaml-hosting-api-to-host-a-winrt-xaml-control,
+        // we should set the initial size of the island here.
+        // Instead we set its size whenever we receive a WM_SIZE,
+        // and it seems like we always receive one early on.
+
         Ok(Box::new(Self {
             dwxs,
             dwxs_native,
@@ -115,8 +118,8 @@ impl Window {
         Ok(match msg {
             WM_SIZE => {
                 // Unpack [width: u16, height:u16] = lparam.
-                let width = (lparam.0 & 0xffff) as i32;
-                let height = ((lparam.0 >> 16) & 0xffff) as i32;
+                let width = (lparam.0 & 0xffffisize) as i32;
+                let height = ((lparam.0 >> 16) & 0xffffisize) as i32;
 
                 // Failure to resize is not fatal.  Ignore any error.
                 let _ = self.on_resize(width, height);
