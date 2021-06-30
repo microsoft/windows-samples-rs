@@ -1,5 +1,0 @@
-[workspace]
-members = [
-    "skeleton",
-    "simple_window"
-]
