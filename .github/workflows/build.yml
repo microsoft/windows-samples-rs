@@ -21,13 +21,18 @@ jobs:
       name: Enumerate crates
       shell: pwsh
       run: |
-        $crates = Get-ChildItem -Directory | ForEach-Object {
-          $toml_path = [IO.Path]::Combine($_, "Cargo.toml");
-          
-          if( (Test-Path $toml_path) -And (Get-Content($toml_path) | ForEach-Object {
-            $_ -imatch "[workspace]" })
-          ) { $_.Name }
-        } | ConvertTo-Json -Compress
+        function Get-BuildableCratePaths {
+            Get-ChildItem -Directory | ForEach-Object {
+              if(Test-Path ([IO.Path]::Combine($_, "Cargo.toml"))) {
+                  [IO.Path]::GetRelativePath(".", $_.FullName)
+              } else {
+                Push-Location $_
+                Get-BuildableCratePaths
+                Pop-Location
+              }
+            }
+        }
+        $crates = Get-BuildableCratePaths | ConvertTo-Json -Compress
         "::set-output name=crate::$crates"
 
   test:
@@ -60,7 +65,7 @@ jobs:
     - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
     - run: rustup target add ${{ matrix.other }}
 
-    - name: windows build (root workspace)
+    - name: windows build
       working-directory: ${{ matrix.crate }}
       run: cargo test --workspace --target ${{ matrix.other }};
 
