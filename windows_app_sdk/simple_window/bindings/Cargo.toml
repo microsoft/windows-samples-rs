@@ -1,7 +1,8 @@
 [package]
-name = "simple_window_bindings"
+name = "bindings"
 version = "0.0.0"
 edition = "2018"
+publish = false
 
 [dependencies]
 windows = "0.12.0"

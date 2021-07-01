@@ -9,7 +9,7 @@ use bindings::{
         LaunchActivatedEventArgs, RoutedEventHandler, Window,
     },
     Windows::Win32::{
-        Foundation::{BOOL, HWND, RECT},
+        Foundation::{HWND, RECT},
         UI::{
             HiDpi::GetDpiForWindow,
             WindowsAndMessaging::{
@@ -48,11 +48,9 @@ impl App {
         window.SetContent(&button)?;
 
         let inspectable = &windows::IInspectable::from(&window);
-        let hwnd = match windows_app::window_handle(inspectable) {
-            Some(hwnd) => HWND(hwnd),
-            _ => panic!("Failed to get native window handle"),
-        };
-
+        let hwnd = HWND(
+            windows_app::window_handle(inspectable).expect("Failed to get native window handle"),
+        );
         resize_window(hwnd, 800, 600).then(|| {
             center_window(hwnd);
         });
@@ -68,7 +66,7 @@ pub fn resize_window(handle: HWND, width: u32, height: u32) -> bool {
     let width = width * scale_factor;
     let height = height * scale_factor;
     unsafe {
-        bool::from(SetWindowPos(
+        SetWindowPos(
             handle,
             HWND(0),
             0, // x
@@ -76,29 +74,29 @@ pub fn resize_window(handle: HWND, width: u32, height: u32) -> bool {
             width as i32,
             height as i32,
             SWP_NOMOVE,
-        ))
+        )
+        .into()
     }
 }
 
 pub fn center_window(handle: HWND) -> bool {
     let mut rect: RECT = RECT::default();
     unsafe {
-        match GetWindowRect(handle, &mut rect as *mut RECT) {
-            BOOL(1) => {
-                let screen_width = GetSystemMetrics(SM_CXSCREEN);
-                let screen_height = GetSystemMetrics(SM_CYSCREEN);
-
-                bool::from(SetWindowPos(
-                    handle,
-                    HWND(0),
-                    (screen_width / 2) - (rect.right - rect.left) / 2,
-                    (screen_height / 2) - (rect.bottom - rect.top) / 2,
-                    0, // cx
-                    0, // cy
-                    SWP_NOSIZE,
-                ))
-            }
-            _ => false,
+        if GetWindowRect(handle, &mut rect as *mut RECT).as_bool() {
+            let screen_width = GetSystemMetrics(SM_CXSCREEN);
+            let screen_height = GetSystemMetrics(SM_CYSCREEN);
+            SetWindowPos(
+                handle,
+                HWND(0),
+                (screen_width / 2) - (rect.right - rect.left) / 2,
+                (screen_height / 2) - (rect.bottom - rect.top) / 2,
+                0, // cx
+                0, // cy
+                SWP_NOSIZE,
+            )
+            .into()
+        } else {
+            false
         }
     }
 }
