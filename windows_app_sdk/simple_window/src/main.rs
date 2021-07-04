@@ -30,7 +30,7 @@ struct App {
 #[allow(non_snake_case)]
 impl App {
     fn OnLaunched(&mut self, _: &Option<LaunchActivatedEventArgs>) -> windows::Result<()> {
-        let window = Window::new().unwrap();
+        let window = Window::new()?;
         window.SetTitle("WinUI Desktop, Unpackaged (Rust)")?;
 
         let button = Button::new()?;
@@ -47,7 +47,7 @@ impl App {
 
         window.SetContent(&button)?;
 
-        let inspectable = &windows::IInspectable::from(&window);
+        let inspectable = &IInspectable::from(&window);
         let hwnd = HWND(
             windows_app::window_handle(inspectable).expect("Failed to get native window handle"),
         );
@@ -80,9 +80,9 @@ pub fn resize_window(handle: HWND, width: u32, height: u32) -> bool {
 }
 
 pub fn center_window(handle: HWND) -> bool {
-    let mut rect: RECT = RECT::default();
+    let mut rect = RECT::default();
     unsafe {
-        if GetWindowRect(handle, &mut rect as *mut RECT).as_bool() {
+        if GetWindowRect(handle, &mut rect).as_bool() {
             let screen_width = GetSystemMetrics(SM_CXSCREEN);
             let screen_height = GetSystemMetrics(SM_CYSCREEN);
             SetWindowPos(
