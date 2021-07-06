@@ -6,5 +6,6 @@ edition = "2018"
 [dependencies]
 windows = { path = "../../windows-rs" }
 bindings = { path = "bindings" }
+callback_macros = { path = "callback-macros" }
 serde = { version = "1.0.125", features = ["derive"] }
 serde_json = "1.0.64"
