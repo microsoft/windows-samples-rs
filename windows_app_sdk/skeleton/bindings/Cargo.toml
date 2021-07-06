@@ -5,9 +5,9 @@ edition = "2018"
 publish = false
 
 [dependencies]
-windows = { git = "https://github.com/microsoft/windows-rs" }
-windows-app = { git = "https://github.com/microsoft/windows-app-rs" }
+windows = "0.14.0"
+windows-app = "0.3.0"
 
 [build-dependencies]
-windows = { git = "https://github.com/microsoft/windows-rs" }
-windows-app = { git = "https://github.com/microsoft/windows-app-rs" }
+windows = "0.14.0"
+windows-app = "0.3.0"
