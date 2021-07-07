@@ -5,6 +5,6 @@ edition = "2018"
 publish = false
 
 [dependencies]
-windows = "0.16.0"
-windows-app = "0.16.0"
+windows = "0.17.0"
+windows-app = "0.17.0"
 bindings = { path = "bindings" }
