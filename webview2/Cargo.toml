@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-windows = "0.14.0"
+windows = "0.16.0"
 bindings = { path = "bindings" }
 serde = { version = "1.0.125", features = ["derive"] }
 serde_json = "1.0.64"
