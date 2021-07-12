@@ -14,7 +14,7 @@ use windows::*;
 use bindings::{
     Microsoft::Web::WebView2::Win32::*,
     Windows::Win32::{
-        Foundation::{E_NOINTERFACE, HWND, LPARAM, LRESULT, PSTR, PWSTR, RECT, S_OK, SIZE, WPARAM},
+        Foundation::{E_NOINTERFACE, HWND, LPARAM, LRESULT, PSTR, PWSTR, RECT, SIZE, S_OK, WPARAM},
         Graphics::Gdi,
         System::{LibraryLoader, Threading, WinRT::EventRegistrationToken},
         UI::{
@@ -23,7 +23,6 @@ use bindings::{
         },
     },
 };
-
 
 #[macro_use]
 extern crate callback_macros;
@@ -205,7 +204,7 @@ impl WebView {
                 Box::new(|environmentcreatedhandler| unsafe {
                     match CreateCoreWebView2Environment(environmentcreatedhandler) {
                         Ok(()) => S_OK,
-                        Err(err) => err.code()
+                        Err(err) => err.code(),
                     }
                 }),
                 Box::new(|error_code, environment| {
@@ -223,9 +222,9 @@ impl WebView {
 
             callback::CreateCoreWebView2ControllerCompletedHandler::wait_for_async_operation(
                 Box::new(move |handler| unsafe {
-                    match env_.CreateCoreWebView2Controller(parent, handler)  {
+                    match env_.CreateCoreWebView2Controller(parent, handler) {
                         Ok(()) => S_OK,
-                        Err(err) => err.code()
+                        Err(err) => err.code(),
                     }
                 }),
                 Box::new(|error_code, controller| {
@@ -451,7 +450,7 @@ impl WebView {
             Box::new(move |handler| unsafe {
                 match webview.AddScriptToExecuteOnDocumentCreated(js, handler) {
                     Ok(()) => S_OK,
-                    Err(err) => err.code()
+                    Err(err) => err.code(),
                 }
             }),
             Box::new(|error_code, _id| error_code),
@@ -463,10 +462,12 @@ impl WebView {
         let webview = self.webview.clone();
         let js = String::from(js);
         callback::ExecuteScriptCompletedHandler::wait_for_async_operation(
-            Box::new(move |handler| unsafe { match webview.ExecuteScript(js, handler)  {
-                Ok(()) => S_OK,
-                Err(err) => err.code()
-            }}),
+            Box::new(move |handler| unsafe {
+                match webview.ExecuteScript(js, handler) {
+                    Ok(()) => S_OK,
+                    Err(err) => err.code(),
+                }
+            }),
             Box::new(|error_code, _result| error_code),
         )?;
         Ok(self)
