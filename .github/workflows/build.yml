@@ -61,8 +61,12 @@ jobs:
           other: i686-pc-windows-msvc
     steps:
     - uses: actions/checkout@v2
-    - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}-${{ matrix.other }}
-    - run: rustup target add ${{ matrix.rust }}-${{ matrix.other }}
+    - name: Configure toolchain
+      run: |
+        rustup update --no-self-update ${{ matrix.rust }}
+        rustup toolchain install ${{ matrix.rust }}-${{ matrix.other }}
+        rustup default ${{ matrix.rust }}-${{ matrix.other }}
+        rustup target add ${{ matrix.rust }}-${{ matrix.other }}
 
     - name: windows build
       working-directory: ${{ matrix.crate }}
