@@ -6,6 +6,9 @@ on:
     branches:
       - master
 
+env:
+  RUSTFLAGS: -Dwarnings
+
 jobs:
   gen_matrix:
     name: Generate crate matrix
@@ -29,7 +32,8 @@ jobs:
               }
             }
         }
-        $crates = Get-BuildableCratePaths | ConvertTo-Json -Compress
+        $crates = Get-BuildableCratePaths | ConvertTo-Json -Compress -AsArray
+        "debug ...=crate::$crates"
         "::set-output name=crate::$crates"
 
   test:
@@ -37,13 +41,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs:
       - gen_matrix
-      - cargo_fmt
-    env:
-      RUSTFLAGS: -D warnings
     strategy:
       matrix:
-        crate: ${{fromJson(needs.gen_matrix.outputs.crate)}}
         include:
+        - crate: ${{fromJson(needs.gen_matrix.outputs.crate)}}
         - os: windows-latest
           rust: stable
           other: x86_64-pc-windows-msvc
@@ -60,26 +61,6 @@ jobs:
           rust: nightly
           other: i686-pc-windows-msvc
     steps:
-    - uses: actions/checkout@v2
-    - name: Configure toolchain
-      run: |
-        rustup update --no-self-update ${{ matrix.rust }}
-        rustup toolchain install ${{ matrix.rust }}-${{ matrix.other }}
-        rustup default ${{ matrix.rust }}-${{ matrix.other }}
-
-    - name: windows build
+    - name: placebo
       working-directory: ${{ matrix.crate }}
-      run: cargo test --workspace
-
-  cargo_fmt:
-    name: Check cargo formatting
-    runs-on: windows-latest
-    needs: gen_matrix
-    strategy:
-      matrix:
-        crate: ${{fromJson(needs.gen_matrix.outputs.crate)}}
-    steps:
-    - uses: actions/checkout@v2
-    - name: Run cargo fmt
-      working-directory: ${{ matrix.crate }}
-      run: cargo fmt -- --check
+      run: dir
