@@ -67,6 +67,7 @@ jobs:
 
     - name: windows build
       working-directory: ${{ matrix.crate }}
+      run: set RUSTFLAGS=-Dwarnings
       run: cargo test --workspace --target ${{ matrix.other }};
 
   cargo_fmt:
