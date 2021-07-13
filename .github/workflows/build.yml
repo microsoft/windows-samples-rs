@@ -66,7 +66,6 @@ jobs:
         rustup update --no-self-update ${{ matrix.rust }}
         rustup toolchain install ${{ matrix.rust }}-${{ matrix.other }}
         rustup default ${{ matrix.rust }}-${{ matrix.other }}
-        rustup target add ${{ matrix.rust }}-${{ matrix.other }}
 
     - name: windows build
       working-directory: ${{ matrix.crate }}
