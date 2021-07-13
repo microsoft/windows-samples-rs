@@ -6,9 +6,6 @@ on:
     branches:
       - master
 
-env:
-  RUSTFLAGS: -Dwarnings
-
 jobs:
   gen_matrix:
     name: Generate crate matrix
@@ -41,6 +38,8 @@ jobs:
     needs:
       - gen_matrix
       - cargo_fmt
+    env:
+      RUSTFLAGS: -D warnings
     strategy:
       matrix:
         crate: ${{fromJson(needs.gen_matrix.outputs.crate)}}
@@ -62,12 +61,15 @@ jobs:
           other: i686-pc-windows-msvc
     steps:
     - uses: actions/checkout@v2
-    - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
-    - run: rustup target add ${{ matrix.other }}
+    - name: Configure toolchain
+      run: |
+        rustup update --no-self-update ${{ matrix.rust }}
+        rustup toolchain install ${{ matrix.rust }}-${{ matrix.other }}
+        rustup default ${{ matrix.rust }}-${{ matrix.other }}
 
     - name: windows build
       working-directory: ${{ matrix.crate }}
-      run: cargo test --workspace --target ${{ matrix.other }};
+      run: cargo test --workspace
 
   cargo_fmt:
     name: Check cargo formatting
