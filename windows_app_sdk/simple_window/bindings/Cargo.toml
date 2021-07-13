@@ -5,9 +5,9 @@ edition = "2018"
 publish = false
 
 [dependencies]
-windows = "0.17.0"
-windows-app = "0.17.0"
+windows = "0.17.2"
+windows-app = "0.17.2"
 
 [build-dependencies]
-windows = "0.17.0"
-windows-app = "0.17.0"
+windows = "0.17.2"
+windows-app = "0.17.2"
