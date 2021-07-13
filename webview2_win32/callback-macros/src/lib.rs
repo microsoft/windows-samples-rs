@@ -36,7 +36,7 @@ impl Parse for CallbackTypes {
 
 struct CallbackStruct {
     pub vis: Visibility,
-    pub struct_token: Token![struct],
+    _struct_token: Token![struct],
     pub ident: Ident,
     pub args: CallbackTypes,
 }
@@ -45,7 +45,7 @@ impl Parse for CallbackStruct {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(CallbackStruct {
             vis: input.parse()?,
-            struct_token: input.parse()?,
+            _struct_token: input.parse()?,
             ident: input.parse()?,
             args: input.parse()?,
         })
