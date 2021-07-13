@@ -64,10 +64,10 @@ jobs:
     - uses: actions/checkout@v2
     - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
     - run: rustup target add ${{ matrix.other }}
+    - run: set RUSTFLAGS=-Dwarnings
 
     - name: windows build
       working-directory: ${{ matrix.crate }}
-      run: set RUSTFLAGS=-Dwarnings
       run: cargo test --workspace --target ${{ matrix.other }};
 
   cargo_fmt:
