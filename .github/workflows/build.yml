@@ -35,11 +35,11 @@ jobs:
   test:
     name: Build and test crate
     runs-on: ${{ matrix.os }}
-    env:
-      RUSTFLAGS: '-D warnings'
     needs:
       - gen_matrix
       - cargo_fmt
+    env:
+      RUSTFLAGS: -D warnings
     strategy:
       matrix:
         crate: ${{fromJson(needs.gen_matrix.outputs.crate)}}
@@ -61,12 +61,12 @@ jobs:
           other: i686-pc-windows-msvc
     steps:
     - uses: actions/checkout@v2
-    - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
-    - run: rustup target add ${{ matrix.other }}
+    - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}-${{ matrix.other }}
+    - run: rustup target add ${{ matrix.rust }}-${{ matrix.other }}
 
     - name: windows build
       working-directory: ${{ matrix.crate }}
-      run: cargo test --workspace --target ${{ matrix.other }};
+      run: cargo test --workspace
 
   cargo_fmt:
     name: Check cargo formatting
