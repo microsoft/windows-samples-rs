@@ -5,9 +5,9 @@ use windows::*;
 
 use bindings::{
     Windows::ApplicationModel::Activation::LaunchActivatedEventArgs,
+    Windows::Win32::System::Com::*,
     Windows::UI::Xaml::Controls::TextBox,
     Windows::UI::Xaml::{Application, ApplicationInitializationCallback, Window},
-    Windows::Win32::System::Com::*,
 };
 
 #[implement(
@@ -26,7 +26,9 @@ impl MyApp {
 }
 
 fn main() -> Result<()> {
-    unsafe { CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?; }
+    unsafe {
+        CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+    }
     Application::Start(ApplicationInitializationCallback::new(|_| {
         MyApp().new()?;
         Ok(())
