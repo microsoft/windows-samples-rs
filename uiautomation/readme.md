@@ -1,3 +1,3 @@
 ## UI Automation
 
-A simple example using the new UI Automation API. Note that this sample requires Windows 11.
+A simple example using the new UI Automation API. This sample requires Windows 11.
