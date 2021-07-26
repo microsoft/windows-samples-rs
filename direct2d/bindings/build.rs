@@ -1,7 +1,8 @@
 fn main() {
     windows::build! {
+        Windows::Win32::System::Com::{CoInitializeEx, CoCreateInstance},
         Windows::{
-            Foundation::Numerics::Matrix3x2,
+            
             Win32::{
                 Foundation::{DXGI_STATUS_OCCLUDED, HINSTANCE, HWND, LPARAM, LRESULT, PSTR, WPARAM},
                 Graphics::{

@@ -8,14 +8,20 @@ use Windows::UI::UIAutomation::*;
 fn main() -> Result<()> {
     unsafe {
         CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
-        let automation: IUIAutomation = CoCreateInstance(&CUIAutomation, None, CLSCTX_ALL)?;
         let window = FindWindowA(None, "Calculator");
+
+        // Start with COM API
+        let automation: IUIAutomation = CoCreateInstance(&CUIAutomation, None, CLSCTX_ALL)?;
         let element: IUIAutomationElement = automation.ElementFromHandle(window.0 as _)?;
 
+        // Use COM API
         let name = element.get_CurrentName()?;
-        println!("name: {}", name);
+        println!("window name: {}", name);
 
-        let element : AutomationElement = element.cast()?;
+        // Query for WinRT API (will fail on earlier versions of Windows)
+        let element: AutomationElement = element.cast()?;
+
+        // Use WinRT API
         println!("file name: {}", element.ExecutableFileName()?);
     }
 

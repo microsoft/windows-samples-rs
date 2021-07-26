@@ -7,6 +7,7 @@ use bindings::{
     Windows::ApplicationModel::Activation::LaunchActivatedEventArgs,
     Windows::UI::Xaml::Controls::TextBox,
     Windows::UI::Xaml::{Application, ApplicationInitializationCallback, Window},
+    Windows::Win32::System::Com::*,
 };
 
 #[implement(
@@ -25,7 +26,7 @@ impl MyApp {
 }
 
 fn main() -> Result<()> {
-    initialize_mta()?;
+    unsafe { CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?; }
     Application::Start(ApplicationInitializationCallback::new(|_| {
         MyApp().new()?;
         Ok(())

@@ -1,5 +1,6 @@
 fn main() {
     windows::build! {
+        Windows::Win32::System::Com::{CoInitializeEx, CoCreateInstance},
         Microsoft::Web::WebView2::Win32::*,
         Windows::Win32::Foundation::{
             E_NOINTERFACE,

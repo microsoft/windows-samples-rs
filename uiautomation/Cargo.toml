@@ -5,4 +5,4 @@ edition = "2018"
 
 [dependencies]
 bindings = { path = "bindings" }
-windows = { git = "https://github.com/microsoft/windows-rs" }
+windows = "0.18"

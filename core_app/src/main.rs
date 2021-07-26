@@ -49,7 +49,6 @@ impl CoreAppView {
 }
 
 fn main() -> Result<()> {
-    initialize_mta()?;
     let app: IFrameworkViewSource = CoreApp().into();
     CoreApplication::Run(app)?;
     Ok(())

@@ -4,6 +4,6 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-windows = "0.17.2"
+windows = "0.18"
 bindings = { path = "bindings" }
 array-init = "2.0.0"

@@ -1,5 +1,6 @@
 fn main() {
     windows::build! {
+        Windows::Win32::System::Com::{CoInitializeEx, CoCreateInstance},
         Microsoft::Web::WebView2::Core::*,
         Windows::Foundation::*,
         Windows::Win32::Foundation::{HINSTANCE, LRESULT, POINT, PWSTR, RECT, SIZE},

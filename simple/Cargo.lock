@@ -3,13 +3,6 @@
 version = 3
 
 [[package]]
-name = "bindings"
-version = "0.0.0"
-dependencies = [
- "windows",
-]
-
-[[package]]
 name = "const-sha1"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -37,7 +30,6 @@ dependencies = [
 name = "sample"
 version = "0.0.0"
 dependencies = [
- "bindings",
  "windows",
 ]
 
