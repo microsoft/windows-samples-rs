@@ -1,10 +1,8 @@
 [package]
-name = "skeleton"
+name = "sample"
 version = "0.0.0"
 edition = "2018"
-publish = false
 
 [dependencies]
-windows = "0.17.2"
-windows-app = "0.17.2"
 bindings = { path = "bindings" }
+windows = "0.18"

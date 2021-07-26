@@ -13,6 +13,7 @@ use windows::*;
 
 use bindings::{
     Microsoft::Web::WebView2::Win32::*,
+    Windows::Win32::System::Com::*,
     Windows::Win32::{
         Foundation::{E_NOINTERFACE, HWND, LPARAM, LRESULT, PSTR, PWSTR, RECT, SIZE, S_OK, WPARAM},
         Graphics::Gdi,
@@ -31,7 +32,9 @@ mod callback;
 mod pwstr;
 
 fn main() -> Result<()> {
-    initialize_sta()?;
+    unsafe {
+        CoInitializeEx(std::ptr::null_mut(), COINIT_APARTMENTTHREADED)?;
+    }
     set_process_dpi_awareness()?;
 
     let webview = WebView::create(None, true)?;

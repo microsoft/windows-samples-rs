@@ -5,6 +5,7 @@ fn main() {
             IEnumSpellingError, ISpellChecker, ISpellCheckerFactory, ISpellingError,
             SpellCheckerFactory, CORRECTIVE_ACTION,
         },
+        Windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx},
         Windows::Win32::System::Com::{CoTaskMemFree, IEnumString},
     };
 }

@@ -4,5 +4,5 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-windows = { git = "https://github.com/microsoft/windows-rs", features = ["raw_dylib"] }
+windows = { version = "0.18", features = ["raw_dylib"] }
 bindings = { path = "bindings" }

@@ -14,6 +14,7 @@ use windows::*;
 use bindings::{
     Microsoft::Web::WebView2::Core::*,
     Windows::Foundation::*,
+    Windows::Win32::System::Com::*,
     Windows::Win32::{
         Foundation::*,
         Graphics::Gdi::*,
@@ -23,7 +24,9 @@ use bindings::{
 };
 
 fn main() -> Result<()> {
-    initialize_sta()?;
+    unsafe {
+        CoInitializeEx(std::ptr::null_mut(), COINIT_APARTMENTTHREADED)?;
+    }
     set_process_dpi_awareness()?;
 
     let webview = WebView::create(None, true)?;
