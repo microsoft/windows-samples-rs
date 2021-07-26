@@ -1,19 +1,21 @@
 use bindings::Windows::Win32;
+use bindings::Windows::Win32::System::Com::*;
 use Win32::Foundation::PWSTR;
 use Win32::Globalization;
 use Win32::System::Com::CoTaskMemFree;
-use bindings::Windows::Win32::System::Com::*;
 
 fn main() -> windows::Result<()> {
     let input = std::env::args()
         .nth(1)
         .expect("Expected one command line argument for text to be spell-corrected");
     // Initialize the COM runtime for this thread
-    unsafe { CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?; }
+    unsafe {
+        CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+    }
 
     // Create ISpellCheckerFactory
     let factory: Globalization::ISpellCheckerFactory =
-    unsafe { CoCreateInstance(&Globalization::SpellCheckerFactory, None, CLSCTX_ALL)? };
+        unsafe { CoCreateInstance(&Globalization::SpellCheckerFactory, None, CLSCTX_ALL)? };
 
     // Make sure that the "en-US" locale is supported
     let locale = "en-US";

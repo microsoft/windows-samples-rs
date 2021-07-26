@@ -1,6 +1,6 @@
 use bindings::{
-    Windows::Win32::System::Com::*,
     Windows::Foundation::Numerics::*,
+    Windows::Win32::System::Com::*,
     Windows::Win32::{
         Foundation::*,
         Graphics::{Direct2D::*, Direct3D11::*, Dxgi::*, Gdi::*},
@@ -13,7 +13,9 @@ use bindings::{
 use windows::*;
 
 fn main() -> Result<()> {
-    unsafe { CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?; }
+    unsafe {
+        CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+    }
     let mut window = Window::new()?;
     window.run()
 }
@@ -67,7 +69,8 @@ impl Window {
         let factory = create_factory()?;
         let dxfactory: IDXGIFactory2 = unsafe { CreateDXGIFactory1()? };
         let style = create_style(&factory)?;
-        let manager: IUIAnimationManager = unsafe { CoCreateInstance(&UIAnimationManager, None, CLSCTX_ALL)? };
+        let manager: IUIAnimationManager =
+            unsafe { CoCreateInstance(&UIAnimationManager, None, CLSCTX_ALL)? };
         let transition = create_transition()?;
 
         let mut dpi = 0.0;
@@ -533,7 +536,8 @@ fn create_style(factory: &ID2D1Factory1) -> Result<ID2D1StrokeStyle> {
 
 fn create_transition() -> Result<IUIAnimationTransition> {
     unsafe {
-        let library: IUIAnimationTransitionLibrary = CoCreateInstance(&UIAnimationTransitionLibrary, None, CLSCTX_ALL)?;
+        let library: IUIAnimationTransitionLibrary =
+            CoCreateInstance(&UIAnimationTransitionLibrary, None, CLSCTX_ALL)?;
         library.CreateAccelerateDecelerateTransition(5.0, 1.0, 0.2, 0.8)
     }
 }
