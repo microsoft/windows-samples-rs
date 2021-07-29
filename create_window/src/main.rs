@@ -16,7 +16,7 @@ fn main() -> Result<()> {
         let instance = GetModuleHandleA(None);
         debug_assert!(instance.0 != 0);
 
-        let windowClass = "window";
+        let window_class = "window";
 
         let wc = WNDCLASSA {
             hCursor: LoadCursorW(None, IDC_ARROW),
@@ -33,7 +33,7 @@ fn main() -> Result<()> {
 
         CreateWindowExA(
             Default::default(),
-            windowClass,
+            window_class,
             "This is a sample window",
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
             CW_USEDEFAULT,

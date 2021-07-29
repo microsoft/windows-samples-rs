@@ -1,12 +1,12 @@
 fn main() {
     windows::build!(
         Windows::Win32::{
-            UI::WindowsAndMessaging::*,
-            Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, PSTR, WPARAM},
+            Foundation::*,
             Graphics::Gdi::ValidateRect,
+            UI::WindowsAndMessaging::*,
             System::LibraryLoader::{
                 GetModuleHandleA,
-            }
+            },
         },
     );
 }
