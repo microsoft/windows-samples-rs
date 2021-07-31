@@ -1,12 +1,6 @@
-use bindings::{
-    Windows::Win32::{
-        Foundation::*,
-        Graphics::Gdi::ValidateRect,
-        UI::WindowsAndMessaging::*,
-        System::LibraryLoader::{
-            GetModuleHandleA,
-        },
-    },
+use bindings::Windows::Win32::{
+    Foundation::*, Graphics::Gdi::ValidateRect, System::LibraryLoader::GetModuleHandleA,
+    UI::WindowsAndMessaging::*,
 };
 
 use windows::*;
