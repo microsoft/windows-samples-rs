@@ -52,6 +52,46 @@ impl Parse for CallbackStruct {
     }
 }
 
+struct StringCallbackTypes {
+    pub interface: TypePath,
+}
+
+impl Parse for StringCallbackTypes {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let content;
+        parenthesized!(content in input);
+        let args: Punctuated<TypePath, Token![,]> = content.parse_terminated(TypePath::parse)?;
+        input.parse::<Token![;]>()?;
+        if args.len() == 1 {
+            let mut args = args.into_iter();
+
+            Ok(StringCallbackTypes {
+                interface: args.next().unwrap(),
+            })
+        } else {
+            Err(content.error("expected (interface)"))
+        }
+    }
+}
+
+struct StringCallbackStruct {
+    pub vis: Visibility,
+    _struct_token: Token![struct],
+    pub ident: Ident,
+    pub args: StringCallbackTypes,
+}
+
+impl Parse for StringCallbackStruct {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(StringCallbackStruct {
+            vis: input.parse()?,
+            _struct_token: input.parse()?,
+            ident: input.parse()?,
+            args: input.parse()?,
+        })
+    }
+}
+
 /// Implement a `CompletedCallback` using the types specified as tuple struct fields.
 #[proc_macro_attribute]
 pub fn completed_callback(_attr: TokenStream, input: TokenStream) -> TokenStream {
@@ -64,9 +104,7 @@ fn impl_completed_callback(ast: &CallbackStruct) -> TokenStream {
 
     let name = &ast.ident;
     let closure = get_closure(name);
-
     let interface = &ast.args.interface;
-    let abi = get_abi(interface);
 
     let arg_1 = &ast.args.arg_1;
     let arg_2 = &ast.args.arg_2;
@@ -74,84 +112,49 @@ fn impl_completed_callback(ast: &CallbackStruct) -> TokenStream {
     let gen = quote! {
         use windows as _;
 
-        type #closure<'a> = CompletedClosure<'a, #arg_1, #arg_2>;
+        type #closure = CompletedClosure<#arg_1, Option<#arg_2>>;
 
         /// Implementation of [`#interface`].
-        #[repr(C)]
-        #vis struct #name<'a> {
-            vtable: *const #abi,
-            count: windows::RefCount,
-            completed: Option<#closure<'a>>,
-        }
+        #[implement(
+            Microsoft::Web::WebView2::Win32::#interface
+        )]
+        #vis struct #name(Option<#closure>);
 
-        impl<'a> #name<'a> {
-            /// Factory method which returns a [`windows::Result<#interface>`] wrapped around a new instance of [`#name`]
-            pub fn create(completed: #closure<'a>) -> windows::Result<#interface> {
-                let handler = Box::new(Self::new(completed));
-                let handler = unsafe { Self::from_abi(Box::into_raw(handler) as windows::RawPtr)? };
-                Ok(handler)
-            }
-
-            unsafe fn from_abi(this: windows::RawPtr) -> windows::Result<#interface> {
-                let unknown = windows::IUnknown::from_abi(this)?;
-                unknown.vtable().1(unknown.abi()); // add_ref to balance the release called in IUnknown::drop
-                unknown.cast()
-            }
-
-            fn new(completed: #closure<'a>) -> Self {
-                static VTABLE: #abi = #abi(
-                    #name::QueryInterface,
-                    #name::AddRef,
-                    #name::Release,
-                    #name::Invoke,
-                );
-
-                Self {
-                   vtable: &VTABLE,
-                   count: windows::RefCount::new(1),
-                   completed: Some(completed),
-                }
+        impl #name {
+            pub fn create(closure: #closure) -> Microsoft::Web::WebView2::Win32::#interface {
+                Self(Some(closure)).into()
             }
 
             pub fn wait_for_async_operation(
-                closure: Box<dyn FnOnce(<Self as Callback<'a>>::Interface) -> windows::HRESULT>,
-                completed: <Self as Callback<'a>>::Closure,
+                closure: Box<
+                    dyn FnOnce(
+                        Microsoft::Web::WebView2::Win32::#interface,
+                    ) -> super::Result<()>,
+                >,
+                completed: #closure,
             ) -> super::Result<()> {
                 let (tx, rx) = mpsc::channel();
-                let completed = Box::new(move |arg_1, arg_2| {
-                    tx.send(completed(arg_1, arg_2))
-                        .expect("send over mpsc channel");
-                    S_OK
+                let completed: #closure = Box::new(move |arg_1, arg_2| -> ::windows::Result<()> {
+                    let result =
+                        completed(arg_1, arg_2).or_else(|err| Err(super::Error::WindowsError(err)));
+                    tx.send(result).expect("send over mpsc channel");
+                    Ok(())
                 });
-                let callback = Self::create(completed)?;
+                let callback = Self::create(completed);
 
-                let mut error_code = closure(callback);
-                if error_code.is_ok() {
-                  error_code = wait_with_pump(rx)?;
-                }
-
-                if error_code.is_err() {
-                  return Err(windows::Error::fast_error(error_code).into());
-                }
-
-                Ok(())
+                closure(callback.into())?;
+                wait_with_pump(rx)?
             }
-        }
 
-        impl<'a> Callback<'a> for #name<'a> {
-            type Interface = #interface;
-            type Closure = #closure<'a>;
-        }
-
-        impl<'a> CallbackInterface<'a, #name<'a>> for #name<'a> {
-            fn ref_count(&self) -> &windows::RefCount {
-                &self.count
-            }
-        }
-
-        impl<'a> CompletedCallback<'a, #name<'a>, #arg_1, #arg_2> for #name<'a> {
-            fn completed(&mut self) -> Option<#closure<'a>> {
-                self.completed.take()
+            fn Invoke(
+                &mut self,
+                arg_1: #arg_1,
+                arg_2: &Option<#arg_2>,
+            ) -> ::windows::Result<()> {
+                match self.0.take() {
+                    Some(completed) => completed(arg_1, arg_2.clone()),
+                    None => Ok(()),
+                }
             }
         }
     };
@@ -173,66 +176,97 @@ fn impl_event_callback(ast: &CallbackStruct) -> TokenStream {
     let closure = get_closure(name);
 
     let interface = &ast.args.interface;
-    let abi = get_abi(interface);
 
     let arg_1 = &ast.args.arg_1;
     let arg_2 = &ast.args.arg_2;
 
     let gen = quote! {
-        type #closure<'a> = EventClosure<'a, #arg_1, #arg_2>;
+        type #closure = EventClosure<Option<#arg_1>, Option<#arg_2>>;
 
         /// Implementation of [`#interface`].
-        #[repr(C)]
-        #vis struct #name<'a> {
-            vtable: *const #abi,
-            count: windows::RefCount,
-            event: #closure<'a>,
+        #[implement(
+            Microsoft::Web::WebView2::Win32::#interface
+        )]
+        #vis struct #name(#closure);
+
+        impl #name {
+            pub fn create(closure: #closure) -> Microsoft::Web::WebView2::Win32::#interface {
+                Self(closure).into()
+            }
+
+            fn Invoke(
+                &mut self,
+                arg_1: &Option<#arg_1>,
+                arg_2: &Option<#arg_2>,
+            ) -> ::windows::Result<()> {
+                self.0(arg_1.clone(), arg_2.clone())
+            }
         }
+    };
 
-        impl<'a> #name<'a> {
-            /// Factory method which returns a [`windows::Result<#interface>`] wrapped around a new instance of [`#name`].
-            pub fn create(event: #closure<'a>) -> windows::Result<#interface> {
-                let handler = Box::new(Self::new(event));
-                let handler = unsafe { Self::from_abi(Box::into_raw(handler) as windows::RawPtr)? };
-                Ok(handler)
+    gen.into()
+}
+
+/// Implement a `StringCallback` using the types specified as tuple struct fields.
+#[proc_macro_attribute]
+pub fn string_callback(_attr: TokenStream, input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as StringCallbackStruct);
+    impl_string_callback(&ast)
+}
+
+fn impl_string_callback(ast: &StringCallbackStruct) -> TokenStream {
+    let vis = &ast.vis;
+
+    let name = &ast.ident;
+    let closure = get_closure(name);
+    let interface = &ast.args.interface;
+
+    let gen = quote! {
+        use windows as _;
+
+        type #closure = CompletedClosure<HRESULT, String>;
+
+        /// Implementation of [`#interface`].
+        #[implement(
+            Microsoft::Web::WebView2::Win32::#interface
+        )]
+        #vis struct #name(Option<#closure>);
+
+        impl #name {
+            pub fn create(closure: #closure) -> Microsoft::Web::WebView2::Win32::#interface {
+                Self(Some(closure)).into()
             }
 
-            unsafe fn from_abi(this: windows::RawPtr) -> windows::Result<#interface> {
-                let unknown = windows::IUnknown::from_abi(this)?;
-                unknown.vtable().1(unknown.abi()); // add_ref to balance the release called in IUnknown::drop
-                unknown.cast()
+            pub fn wait_for_async_operation(
+                closure: Box<
+                    dyn FnOnce(
+                        Microsoft::Web::WebView2::Win32::#interface,
+                    ) -> super::Result<()>,
+                >,
+                completed: #closure,
+            ) -> super::Result<()> {
+                let (tx, rx) = mpsc::channel();
+                let completed: #closure = Box::new(move |arg_1, arg_2| -> ::windows::Result<()> {
+                    let result =
+                        completed(arg_1, arg_2).or_else(|err| Err(super::Error::WindowsError(err)));
+                    tx.send(result).expect("send over mpsc channel");
+                    Ok(())
+                });
+                let callback = Self::create(completed);
+
+                closure(callback.into())?;
+                wait_with_pump(rx)?
             }
 
-            fn new(event: #closure<'a>) -> Self {
-                static VTABLE: #abi = #abi(
-                    #name::QueryInterface,
-                    #name::AddRef,
-                    #name::Release,
-                    #name::Invoke,
-                );
-
-                Self {
-                    vtable: &VTABLE,
-                    count: windows::RefCount::new(1),
-                    event,
+            fn Invoke(
+                &mut self,
+                arg_1: HRESULT,
+                arg_2: PWSTR,
+            ) -> ::windows::Result<()> {
+                match self.0.take() {
+                    Some(completed) => completed(arg_1, string_from_pwstr(arg_2)),
+                    None => Ok(()),
                 }
-            }
-        }
-
-        impl<'a> Callback<'a> for #name<'a> {
-            type Interface = #interface;
-            type Closure = #closure<'a>;
-        }
-
-        impl<'a> CallbackInterface<'a, #name<'a>> for #name<'a> {
-            fn ref_count(&self) -> &windows::RefCount {
-                &self.count
-            }
-        }
-
-        impl<'a> EventCallback<'a, #name<'a>, #arg_1, #arg_2> for #name<'a> {
-            fn event(&mut self) -> &mut #closure<'a> {
-                &mut self.event
             }
         }
     };
@@ -242,17 +276,4 @@ fn impl_event_callback(ast: &CallbackStruct) -> TokenStream {
 
 fn get_closure(name: &Ident) -> Ident {
     format_ident!("{}Closure", name)
-}
-
-fn get_abi(interface: &TypePath) -> TypePath {
-    let mut abi = interface.clone();
-    let last_ident = &mut abi
-        .path
-        .segments
-        .last_mut()
-        .expect("abi.path.segments.last_mut()")
-        .ident;
-    *last_ident = format_ident!("{}_abi", last_ident);
-
-    abi
 }

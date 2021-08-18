@@ -15,7 +15,7 @@ use bindings::{
     Microsoft::Web::WebView2::Win32::*,
     Windows::Win32::System::Com::*,
     Windows::Win32::{
-        Foundation::{E_NOINTERFACE, HWND, LPARAM, LRESULT, PSTR, PWSTR, RECT, SIZE, S_OK, WPARAM},
+        Foundation::{HWND, LPARAM, LRESULT, PSTR, PWSTR, RECT, SIZE, WPARAM},
         Graphics::Gdi,
         System::{LibraryLoader, Threading, WinRT::EventRegistrationToken},
         UI::{
@@ -201,42 +201,40 @@ impl WebView {
         };
 
         let environment = {
-            let mut result = Err(windows::Error::fast_error(E_NOINTERFACE));
+            let (tx, rx) = mpsc::channel();
 
             callback::CreateCoreWebView2EnvironmentCompletedHandler::wait_for_async_operation(
                 Box::new(|environmentcreatedhandler| unsafe {
-                    match CreateCoreWebView2Environment(environmentcreatedhandler) {
-                        Ok(()) => S_OK,
-                        Err(err) => err.code(),
-                    }
+                    CreateCoreWebView2Environment(environmentcreatedhandler)
+                        .or_else(|err| Err(Error::WindowsError(err)))
                 }),
-                Box::new(|error_code, environment| {
-                    result = error_code.and_some(environment);
-                    error_code
+                Box::new(move |error_code, environment| {
+                    tx.send(error_code.and_some(environment))
+                        .expect("send over mpsc channel");
+                    error_code.ok()
                 }),
             )?;
 
-            result
+            rx.recv().or_else(|_| Err(Error::SendError))?
         }?;
 
         let controller = {
-            let mut result = Err(windows::Error::fast_error(E_NOINTERFACE));
+            let (tx, rx) = mpsc::channel();
             let env_ = environment.clone();
 
             callback::CreateCoreWebView2ControllerCompletedHandler::wait_for_async_operation(
                 Box::new(move |handler| unsafe {
-                    match env_.CreateCoreWebView2Controller(parent, handler) {
-                        Ok(()) => S_OK,
-                        Err(err) => err.code(),
-                    }
+                    env_.CreateCoreWebView2Controller(parent, handler)
+                        .or_else(|err| Err(Error::WindowsError(err)))
                 }),
-                Box::new(|error_code, controller| {
-                    result = error_code.and_some(controller);
-                    error_code
+                Box::new(move |error_code, controller| {
+                    tx.send(error_code.and_some(controller))
+                        .expect("send over mpsc channel");
+                    error_code.ok()
                 }),
             )?;
 
-            result
+            rx.recv().or_else(|_| Err(Error::SendError))?
         }?;
 
         let size = get_window_size(parent);
@@ -314,9 +312,9 @@ impl WebView {
                                 }
                             }
                         }
-                        S_OK
+                        Ok(())
                     },
-                ))?,
+                )),
                 &mut _token,
             )?;
         }
@@ -337,9 +335,9 @@ impl WebView {
             let handler = callback::NavigationCompletedEventHandler::create(Box::new(
                 move |_sender, _args| {
                     tx.send(()).expect("send over mpsc channel");
-                    S_OK
+                    Ok(())
                 },
-            ))?;
+            ));
             let mut token = EventRegistrationToken::default();
             unsafe {
                 webview.add_NavigationCompleted(handler, &mut token)?;
@@ -451,12 +449,11 @@ impl WebView {
         let js = String::from(js);
         callback::AddScriptToExecuteOnDocumentCreatedCompletedHandler::wait_for_async_operation(
             Box::new(move |handler| unsafe {
-                match webview.AddScriptToExecuteOnDocumentCreated(js, handler) {
-                    Ok(()) => S_OK,
-                    Err(err) => err.code(),
-                }
+                webview
+                    .AddScriptToExecuteOnDocumentCreated(js, handler)
+                    .or_else(|err| Err(Error::WindowsError(err)))
             }),
-            Box::new(|error_code, _id| error_code),
+            Box::new(|error_code, _id| error_code.ok()),
         )?;
         Ok(self)
     }
@@ -466,12 +463,11 @@ impl WebView {
         let js = String::from(js);
         callback::ExecuteScriptCompletedHandler::wait_for_async_operation(
             Box::new(move |handler| unsafe {
-                match webview.ExecuteScript(js, handler) {
-                    Ok(()) => S_OK,
-                    Err(err) => err.code(),
-                }
+                webview
+                    .ExecuteScript(js, handler)
+                    .or_else(|err| Err(Error::WindowsError(err)))
             }),
-            Box::new(|error_code, _result| error_code),
+            Box::new(|error_code, _result| error_code.ok()),
         )?;
         Ok(self)
     }
