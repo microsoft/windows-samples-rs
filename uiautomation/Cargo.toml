@@ -5,4 +5,4 @@ edition = "2018"
 
 [dependencies]
 bindings = { path = "bindings" }
-windows = "0.18"
+windows = "0.19.0"
