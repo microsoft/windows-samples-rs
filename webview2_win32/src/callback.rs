@@ -4,7 +4,13 @@ use windows::{implement, IUnknown, Interface, HRESULT};
 
 use bindings::{
     Microsoft::{self, Web::WebView2::Win32::*},
-    Windows::{self, Win32::Foundation::PWSTR},
+    Windows::{
+        self,
+        Win32::{
+            Foundation::{BOOL, PWSTR},
+            Storage::StructuredStorage::IStream,
+        },
+    },
 };
 
 use super::{pwstr::string_from_pwstr, wait_with_pump};
@@ -30,6 +36,18 @@ impl<'a> InvokeArg<'a> for HRESULT {
 
     fn convert(input: HRESULT) -> windows::Result<()> {
         input.ok()
+    }
+}
+
+impl ClosureArg for BOOL {
+    type Output = Self;
+}
+
+impl<'a> InvokeArg<'a> for BOOL {
+    type Input = Self;
+
+    fn convert(input: BOOL) -> BOOL {
+        input
     }
 }
 
@@ -286,9 +304,79 @@ pub struct WebResourceRequestedEventHandler(
 );
 
 #[event_callback]
+pub struct WebResourceResponseReceivedEventHandler(
+    ICoreWebView2WebResourceResponseReceivedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2WebResourceResponseReceivedEventArgs>,
+);
+
+#[completed_callback]
+pub struct WebResourceResponseViewGetContentCompletedHandler(
+    ICoreWebView2WebResourceResponseViewGetContentCompletedHandler,
+    HRESULT,
+    Option<IStream>,
+);
+
+#[event_callback]
 pub struct WindowCloseRequestedEventHandler(
     ICoreWebView2WindowCloseRequestedEventHandler,
     Option<ICoreWebView2>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct DownloadStartingEventHandler(
+    ICoreWebView2DownloadStartingEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2DownloadStartingEventArgs>,
+);
+
+#[event_callback]
+pub struct BytesReceivedChangedEventHandler(
+    ICoreWebView2BytesReceivedChangedEventHandler,
+    Option<ICoreWebView2DownloadOperation>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct EstimatedEndTimeChangedEventHandler(
+    ICoreWebView2EstimatedEndTimeChangedEventHandler,
+    Option<ICoreWebView2DownloadOperation>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct StateChangedEventHandler(
+    ICoreWebView2StateChangedEventHandler,
+    Option<ICoreWebView2DownloadOperation>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct DevToolsProtocolEventReceivedEventHandler(
+    ICoreWebView2DevToolsProtocolEventReceivedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2DevToolsProtocolEventReceivedEventArgs>,
+);
+
+#[event_callback]
+pub struct FrameCreatedEventHandler(
+    ICoreWebView2FrameCreatedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2FrameCreatedEventArgs>,
+);
+
+#[event_callback]
+pub struct FrameDestroyedEventHandler(
+    ICoreWebView2FrameDestroyedEventHandler,
+    Option<ICoreWebView2Frame>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct FrameNameChangedEventHandler(
+    ICoreWebView2FrameNameChangedEventHandler,
+    Option<ICoreWebView2Frame>,
     Option<IUnknown>,
 );
 
@@ -298,3 +386,6 @@ pub struct GetCookiesCompletedHandler(
     HRESULT,
     Option<ICoreWebView2CookieList>,
 );
+
+#[completed_callback]
+pub struct TrySuspendCompletedHandler(ICoreWebView2TrySuspendCompletedHandler, HRESULT, BOOL);
