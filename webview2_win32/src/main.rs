@@ -3,7 +3,7 @@
 use std::{
     collections::HashMap,
     ffi::CString,
-    mem,
+    mem, ptr,
     sync::{mpsc, Arc, Mutex},
 };
 
@@ -13,7 +13,7 @@ use windows::*;
 
 use bindings::{
     Microsoft::Web::WebView2::Win32::*,
-    Windows::Win32::System::Com::*,
+    Windows::Win32::{Foundation::E_POINTER, System::Com::*},
     Windows::Win32::{
         Foundation::{HWND, LPARAM, LRESULT, PSTR, PWSTR, RECT, SIZE, WPARAM},
         Graphics::Gdi,
@@ -130,10 +130,12 @@ impl FrameWindow {
     fn new() -> Self {
         let hwnd = {
             let class_name = "WebView";
-            let mut window_class = WNDCLASSA::default();
-            window_class.lpfnWndProc = Some(window_proc);
             let c_class_name = CString::new(class_name).expect("lpszClassName");
-            window_class.lpszClassName = PSTR(c_class_name.as_ptr() as *mut _);
+            let window_class = WNDCLASSA {
+                lpfnWndProc: Some(window_proc),
+                lpszClassName: PSTR(c_class_name.as_ptr() as *mut _),
+                ..WNDCLASSA::default()
+            };
 
             unsafe {
                 WindowsAndMessaging::RegisterClassA(&window_class);
@@ -150,7 +152,7 @@ impl FrameWindow {
                     None,
                     None,
                     LibraryLoader::GetModuleHandleA(None),
-                    0 as *mut _,
+                    ptr::null_mut(),
                 )
             }
         };
@@ -164,14 +166,19 @@ impl FrameWindow {
 
 struct WebViewController(ICoreWebView2Controller);
 
+type WebViewSender = mpsc::Sender<Box<dyn FnOnce(WebView) + Send>>;
+type WebViewReceiver = mpsc::Receiver<Box<dyn FnOnce(WebView) + Send>>;
+type BindingCallback = Box<dyn FnMut(Vec<Value>) -> Result<Value>>;
+type BindingsMap = HashMap<String, BindingCallback>;
+
 #[derive(Clone)]
 pub struct WebView {
     controller: Arc<WebViewController>,
     webview: Arc<ICoreWebView2>,
-    tx: mpsc::Sender<Box<dyn FnOnce(WebView) + Send>>,
-    rx: Arc<mpsc::Receiver<Box<dyn FnOnce(WebView) + Send>>>,
+    tx: WebViewSender,
+    rx: Arc<WebViewReceiver>,
     thread_id: u32,
-    bindings: Arc<Mutex<HashMap<String, Box<dyn FnMut(Vec<Value>) -> Result<Value>>>>>,
+    bindings: Arc<Mutex<BindingsMap>>,
     frame: Option<FrameWindow>,
     parent: Arc<HWND>,
     url: Arc<Mutex<String>>,
@@ -206,35 +213,37 @@ impl WebView {
             callback::CreateCoreWebView2EnvironmentCompletedHandler::wait_for_async_operation(
                 Box::new(|environmentcreatedhandler| unsafe {
                     CreateCoreWebView2Environment(environmentcreatedhandler)
-                        .or_else(|err| Err(Error::WindowsError(err)))
+                        .map_err(Error::WindowsError)
                 }),
                 Box::new(move |error_code, environment| {
-                    tx.send(error_code.and_some(environment))
+                    error_code?;
+                    tx.send(environment.ok_or_else(|| windows::Error::fast_error(E_POINTER)))
                         .expect("send over mpsc channel");
-                    error_code.ok()
+                    Ok(())
                 }),
             )?;
 
-            rx.recv().or_else(|_| Err(Error::SendError))?
+            rx.recv().map_err(|_| Error::SendError)?
         }?;
 
         let controller = {
             let (tx, rx) = mpsc::channel();
-            let env_ = environment.clone();
 
             callback::CreateCoreWebView2ControllerCompletedHandler::wait_for_async_operation(
                 Box::new(move |handler| unsafe {
-                    env_.CreateCoreWebView2Controller(parent, handler)
-                        .or_else(|err| Err(Error::WindowsError(err)))
+                    environment
+                        .CreateCoreWebView2Controller(parent, handler)
+                        .map_err(Error::WindowsError)
                 }),
                 Box::new(move |error_code, controller| {
-                    tx.send(error_code.and_some(controller))
+                    error_code?;
+                    tx.send(controller.ok_or_else(|| windows::Error::fast_error(E_POINTER)))
                         .expect("send over mpsc channel");
-                    error_code.ok()
+                    Ok(())
                 }),
             )?;
 
-            rx.recv().or_else(|_| Err(Error::SendError))?
+            rx.recv().map_err(|_| Error::SendError)?
         }?;
 
         let size = get_window_size(parent);
@@ -451,9 +460,9 @@ impl WebView {
             Box::new(move |handler| unsafe {
                 webview
                     .AddScriptToExecuteOnDocumentCreated(js, handler)
-                    .or_else(|err| Err(Error::WindowsError(err)))
+                    .map_err(Error::WindowsError)
             }),
-            Box::new(|error_code, _id| error_code.ok()),
+            Box::new(|error_code, _id| error_code),
         )?;
         Ok(self)
     }
@@ -465,9 +474,9 @@ impl WebView {
             Box::new(move |handler| unsafe {
                 webview
                     .ExecuteScript(js, handler)
-                    .or_else(|err| Err(Error::WindowsError(err)))
+                    .map_err(Error::WindowsError)
             }),
-            Box::new(|error_code, _result| error_code.ok()),
+            Box::new(|error_code, _result| error_code),
         )?;
         Ok(self)
     }
@@ -550,7 +559,7 @@ impl WebView {
                 WindowsAndMessaging::GWLP_USERDATA,
                 match webview {
                     Some(webview) => Box::into_raw(webview) as _,
-                    None => 0 as _,
+                    None => 0_isize,
                 },
             ) {
                 0 => None,
