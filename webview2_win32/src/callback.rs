@@ -204,6 +204,9 @@ type CapturePreviewCompletedHandlerClosure =
     Box<dyn FnOnce(<HRESULT as ClosureArg>::Output) -> ::windows::Result<()>>;
 
 /// Implementation of [`ICoreWebView2CapturePreviewCompletedHandler`].
+///
+/// This interface is unique in that it only takes 1 parameter, which is why
+/// it does not use the [`completed_callback`] macro for its implementation.
 #[implement(Microsoft::Web::WebView2::Win32::ICoreWebView2CapturePreviewCompletedHandler)]
 pub struct CapturePreviewCompletedHandler(Option<CapturePreviewCompletedHandlerClosure>);
 
