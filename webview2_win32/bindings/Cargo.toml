@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-windows = { path = "../../../windows-rs" }
+windows = "0.19.0"
 
 [build-dependencies]
-windows = { path = "../../../windows-rs" }
+windows = "0.19.0"
