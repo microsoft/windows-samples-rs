@@ -1,3 +1,0 @@
-## Rust language sample for Windows App SDK
-
-Demonstrates how to ready an app to use the Windows App SDK and create a Microsoft UI XAML (WinUI 3) [Window](https://docs.microsoft.com/en-us/windows/winui/api/microsoft.ui.xaml.window?view=winui-3.0&WT.mc_id=WD-MVP-5002756) and handle [routed events](https://docs.microsoft.com/en-us/windows/winui/api/microsoft.ui.xaml.routedevent?view=winui-3.0&WT.mc_id=WD-MVP-5002756).
