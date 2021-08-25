@@ -1,248 +1,391 @@
-use std::{marker::PhantomData, sync::mpsc};
+use std::sync::mpsc;
 
-use windows::{Abi, Interface};
+use windows::{implement, IUnknown, Interface, HRESULT};
 
 use bindings::{
-    Microsoft::Web::WebView2::Win32 as WebView2,
-    Windows::Win32::Foundation::{E_NOINTERFACE, E_POINTER, PWSTR, S_OK},
+    Microsoft::{self, Web::WebView2::Win32::*},
+    Windows::{
+        self,
+        Win32::{
+            Foundation::{BOOL, PWSTR},
+            Storage::StructuredStorage::IStream,
+        },
+    },
 };
 
 use super::{pwstr::string_from_pwstr, wait_with_pump};
 
-/// Common trait for [`CompletedCallback`] and [`EventCallback`].
-pub trait Callback<'a> {
-    /// [`windows::Interface`] implemented by this [`Callback`].
-    type Interface: 'a + Interface;
-    /// Boxed closure type, either [`CompletedClosure`] or [`EventClosure`].
-    type Closure: 'a;
+pub trait ClosureArg {
+    type Output: Sized;
 }
 
-/// Common trait for [`CompletedCallback`] and [`EventCallback`] which uses default method
-/// implementations to support the [`windows::IUnknown`] interface.
-#[allow(non_snake_case)]
-pub trait CallbackInterface<'a, T: Callback<'a>>: Sized {
-    fn ref_count(&self) -> &windows::RefCount;
-
-    unsafe extern "system" fn QueryInterface(
-        this: windows::RawPtr,
-        iid: &windows::Guid,
-        interface: *mut windows::RawPtr,
-    ) -> windows::HRESULT {
-        if interface.is_null() {
-            E_POINTER
-        } else if *iid == windows::IUnknown::IID
-            || *iid == <<T as Callback>::Interface as Interface>::IID
-        {
-            Self::AddRef(this);
-            *interface = this;
-            S_OK
-        } else {
-            E_NOINTERFACE
-        }
-    }
-
-    unsafe extern "system" fn AddRef(this: windows::RawPtr) -> u32 {
-        let interface = this as *mut Self;
-        (*interface).ref_count().add_ref()
-    }
-
-    unsafe extern "system" fn Release(this: windows::RawPtr) -> u32 {
-        let interface = this as *mut Self;
-        let count = (*interface).ref_count().release();
-        if count == 0 {
-            // Destroy the underlying data
-            Box::from_raw(interface);
-        }
-        count
-    }
-}
-
-/// Argument conversion trait, which translates from [`bindings::Windows::Win32`] types passed
-/// to the [`CompletedCallback::Invoke`] or [`EventCallback::Invoke`] COM method to the `Rust`
-/// types passed to the [`Callback::Closure`].
-pub trait ClosureArg<'a> {
+pub trait InvokeArg<'a> {
     type Input: 'a;
-    type Output: 'a;
 
-    /// Convert from the [`ClosureArg::Input`] type to [`ClosureArg::Output`]
-    fn convert(input: Self::Input) -> Self::Output;
+    fn convert(input: Self::Input) -> <Self as ClosureArg>::Output
+    where
+        Self: ClosureArg;
 }
 
-/// Pass-through argument conversion for [`windows::HRESULT`].
-pub struct ErrorCodeArg;
+impl ClosureArg for HRESULT {
+    type Output = windows::Result<()>;
+}
 
-impl<'a> ClosureArg<'a> for ErrorCodeArg {
-    type Input = windows::HRESULT;
-    type Output = windows::HRESULT;
+impl<'a> InvokeArg<'a> for HRESULT {
+    type Input = Self;
 
-    /// Pass-through argument conversion for [`windows::HRESULT`].
-    fn convert(input: windows::HRESULT) -> windows::HRESULT {
+    fn convert(input: HRESULT) -> windows::Result<()> {
+        input.ok()
+    }
+}
+
+impl ClosureArg for BOOL {
+    type Output = Self;
+}
+
+impl<'a> InvokeArg<'a> for BOOL {
+    type Input = Self;
+
+    fn convert(input: BOOL) -> BOOL {
         input
     }
 }
 
-/// Argument conversion from [`windows::RawPtr`] to [`windows::Interface`].
-pub struct InterfaceArg<I: Interface>(PhantomData<I>);
-
-impl<'a, I: 'a + Interface> ClosureArg<'a> for InterfaceArg<I> {
-    type Input = windows::RawPtr;
-    type Output = Option<I>;
-
-    /// Convert from [`windows::RawPtr`] to an owned [`windows::Interface`].
-    fn convert(input: windows::RawPtr) -> Option<I> {
-        if input.is_null() {
-            None
-        } else {
-            match unsafe { Self::from_abi(input) } {
-                Ok(interface) => Some(interface),
-                Err(_) => None,
-            }
-        }
-    }
-}
-
-impl<'a, I: 'a + Interface> InterfaceArg<I> {
-    /// Helper method to wrap [`windows::RawPtr`] in [`Interface`].
-    unsafe fn from_abi(this: windows::RawPtr) -> windows::Result<I> {
-        let unknown = windows::IUnknown::from_abi(this)?;
-        unknown.vtable().1(unknown.abi()); // add_ref to balance the release called in IUnknown::drop
-        unknown.cast()
-    }
-}
-
-/// Argument conversion from [`PWSTR`] to [`String`], without requiring the [`PWSTR`] to be
-/// allocated by `Rust`.
-pub struct StringArg;
-
-impl<'a> ClosureArg<'a> for StringArg {
-    type Input = PWSTR;
+impl ClosureArg for PWSTR {
     type Output = String;
+}
 
-    /// Convert from [`PWSTR`] to an owned [`String`] without requiring the [`PWSTR`] to be
-    /// allocated by `Rust`.
+impl<'a> InvokeArg<'a> for PWSTR {
+    type Input = Self;
+
     fn convert(input: PWSTR) -> String {
         string_from_pwstr(input)
     }
 }
 
-/// Generic closure signature for [`CompletedCallback`].
-pub type CompletedClosure<'a, Arg1, Arg2> = Box<
-    dyn 'a
-        + FnOnce(
-            <Arg1 as ClosureArg<'a>>::Output,
-            <Arg2 as ClosureArg<'a>>::Output,
-        ) -> windows::HRESULT,
->;
+impl<I: Interface> ClosureArg for Option<I> {
+    type Output = Self;
+}
 
-/// All of the async operations in [`WebView2`] use a completed handler interface which implements
-/// a COM method matching [`CompletedCallback::Invoke`]. The [`CompletedCallback::Arg1::Input`] and
-/// [`CompletedCallback::Arg2::Input`] parameter types vary depending on the async operation. Each
-/// instance of the completed handler can only execute once.
-#[allow(non_snake_case)]
-pub trait CompletedCallback<'a, T, Arg1, Arg2>: CallbackInterface<'a, T>
-where
-    T: Callback<'a>,
-    Arg1: ClosureArg<'a>,
-    Arg2: ClosureArg<'a>,
-{
-    fn completed(&mut self) -> Option<CompletedClosure<'a, Arg1, Arg2>>;
+impl<'a, I: 'a + Interface> InvokeArg<'a> for Option<I> {
+    type Input = &'a Self;
 
-    unsafe extern "system" fn Invoke(
-        this: windows::RawPtr,
-        arg_1: Arg1::Input,
-        arg_2: Arg2::Input,
-    ) -> windows::HRESULT {
-        let interface = this as *mut Self;
-        match (*interface).completed() {
-            Some(completed) => completed(Arg1::convert(arg_1), Arg2::convert(arg_2)),
-            None => S_OK,
-        }
+    fn convert(input: &'a Self) -> <Self as ClosureArg>::Output {
+        input.clone()
     }
 }
 
-/// Generic closure signature for [`EventCallback`].
-pub type EventClosure<'a, Arg1, Arg2> = Box<
-    dyn 'a
-        + FnMut(
-            <Arg1 as ClosureArg<'a>>::Output,
-            <Arg2 as ClosureArg<'a>>::Output,
-        ) -> windows::HRESULT,
+/// Generic closure signature for [`completed_callback`].
+pub type CompletedClosure<Arg1, Arg2> = Box<
+    dyn FnOnce(<Arg1 as ClosureArg>::Output, <Arg2 as ClosureArg>::Output) -> ::windows::Result<()>,
 >;
 
-/// All of the async events in [`WebView2`] use a repeatable handler interface which implements
-/// a COM method matching [`EventCallback::Invoke`]. The [`EventCallback::Arg1::Input`] and
-/// [`EventCallback::Arg2::Input`] parameter types vary depending on the async operation.
-#[allow(non_snake_case)]
-pub trait EventCallback<'a, T, Arg1, Arg2>: CallbackInterface<'a, T>
-where
-    T: Callback<'a>,
-    Arg1: ClosureArg<'a>,
-    Arg2: ClosureArg<'a>,
-{
-    fn event(&mut self) -> &mut EventClosure<'a, Arg1, Arg2>;
-
-    unsafe extern "system" fn Invoke(
-        this: windows::RawPtr,
-        arg_1: Arg1::Input,
-        arg_2: Arg2::Input,
-    ) -> windows::HRESULT {
-        let interface = this as *mut Self;
-        ((*interface).event())(Arg1::convert(arg_1), Arg2::convert(arg_2))
-    }
-}
+/// Generic closure signature for [`event_callback`].
+pub type EventClosure<Arg1, Arg2> = Box<
+    dyn FnMut(<Arg1 as ClosureArg>::Output, <Arg2 as ClosureArg>::Output) -> windows::Result<()>,
+>;
 
 #[completed_callback]
 pub struct CreateCoreWebView2EnvironmentCompletedHandler(
-    WebView2::ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
-    ErrorCodeArg,
-    InterfaceArg<WebView2::ICoreWebView2Environment>,
+    ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
+    HRESULT,
+    Option<ICoreWebView2Environment>,
 );
 
 #[completed_callback]
 pub struct CreateCoreWebView2ControllerCompletedHandler(
-    WebView2::ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
-    ErrorCodeArg,
-    InterfaceArg<WebView2::ICoreWebView2Controller>,
+    ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
+    HRESULT,
+    Option<ICoreWebView2Controller>,
 );
 
 #[event_callback]
-pub struct WebMessageReceivedEventHandler(
-    WebView2::ICoreWebView2WebMessageReceivedEventHandler,
-    InterfaceArg<WebView2::ICoreWebView2>,
-    InterfaceArg<WebView2::ICoreWebView2WebMessageReceivedEventArgs>,
+pub struct NewBrowserVersionAvailableEventHandler(
+    ICoreWebView2NewBrowserVersionAvailableEventHandler,
+    Option<ICoreWebView2Environment>,
+    Option<IUnknown>,
+);
+
+#[completed_callback]
+pub struct CreateCoreWebView2CompositionControllerCompletedHandler(
+    ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler,
+    HRESULT,
+    Option<ICoreWebView2CompositionController>,
 );
 
 #[event_callback]
-pub struct WebResourceRequestedEventHandler(
-    WebView2::ICoreWebView2WebResourceRequestedEventHandler,
-    InterfaceArg<WebView2::ICoreWebView2>,
-    InterfaceArg<WebView2::ICoreWebView2WebResourceRequestedEventArgs>,
+pub struct ZoomFactorChangedEventHandler(
+    ICoreWebView2ZoomFactorChangedEventHandler,
+    Option<ICoreWebView2Controller>,
+    Option<IUnknown>,
 );
 
 #[event_callback]
-pub struct PermissionRequestedEventHandler(
-    WebView2::ICoreWebView2PermissionRequestedEventHandler,
-    InterfaceArg<WebView2::ICoreWebView2>,
-    InterfaceArg<WebView2::ICoreWebView2PermissionRequestedEventArgs>,
+pub struct MoveFocusRequestedEventHandler(
+    ICoreWebView2MoveFocusRequestedEventHandler,
+    Option<ICoreWebView2Controller>,
+    Option<ICoreWebView2MoveFocusRequestedEventArgs>,
+);
+
+#[event_callback]
+pub struct FocusChangedEventHandler(
+    ICoreWebView2FocusChangedEventHandler,
+    Option<ICoreWebView2Controller>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct AcceleratorKeyPressedEventHandler(
+    ICoreWebView2AcceleratorKeyPressedEventHandler,
+    Option<ICoreWebView2Controller>,
+    Option<ICoreWebView2AcceleratorKeyPressedEventArgs>,
+);
+
+#[event_callback]
+pub struct RasterizationScaleChangedEventHandler(
+    ICoreWebView2RasterizationScaleChangedEventHandler,
+    Option<ICoreWebView2Controller>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct NavigationStartingEventHandler(
+    ICoreWebView2NavigationStartingEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2NavigationStartingEventArgs>,
+);
+
+#[event_callback]
+pub struct ContentLoadingEventHandler(
+    ICoreWebView2ContentLoadingEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2ContentLoadingEventArgs>,
+);
+
+#[event_callback]
+pub struct SourceChangedEventHandler(
+    ICoreWebView2SourceChangedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2SourceChangedEventArgs>,
+);
+
+#[event_callback]
+pub struct HistoryChangedEventHandler(
+    ICoreWebView2HistoryChangedEventHandler,
+    Option<ICoreWebView2>,
+    Option<IUnknown>,
 );
 
 #[event_callback]
 pub struct NavigationCompletedEventHandler(
-    WebView2::ICoreWebView2NavigationCompletedEventHandler,
-    InterfaceArg<WebView2::ICoreWebView2>,
-    InterfaceArg<WebView2::ICoreWebView2NavigationCompletedEventArgs>,
+    ICoreWebView2NavigationCompletedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2NavigationCompletedEventArgs>,
+);
+
+#[event_callback]
+pub struct ScriptDialogOpeningEventHandler(
+    ICoreWebView2ScriptDialogOpeningEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2ScriptDialogOpeningEventArgs>,
+);
+
+#[event_callback]
+pub struct PermissionRequestedEventHandler(
+    ICoreWebView2PermissionRequestedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2PermissionRequestedEventArgs>,
+);
+
+#[event_callback]
+pub struct ProcessFailedEventHandler(
+    ICoreWebView2ProcessFailedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2ProcessFailedEventArgs>,
 );
 
 #[completed_callback]
 pub struct AddScriptToExecuteOnDocumentCreatedCompletedHandler(
-    WebView2::ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler,
-    ErrorCodeArg,
-    StringArg,
+    ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler,
+    HRESULT,
+    PWSTR,
 );
 
 #[completed_callback]
 pub struct ExecuteScriptCompletedHandler(
-    WebView2::ICoreWebView2ExecuteScriptCompletedHandler,
-    ErrorCodeArg,
-    StringArg,
+    ICoreWebView2ExecuteScriptCompletedHandler,
+    HRESULT,
+    PWSTR,
 );
+
+type CapturePreviewCompletedHandlerClosure =
+    Box<dyn FnOnce(<HRESULT as ClosureArg>::Output) -> ::windows::Result<()>>;
+
+/// Implementation of [`ICoreWebView2CapturePreviewCompletedHandler`].
+///
+/// This interface is unique in that it only takes 1 parameter, which is why
+/// it does not use the [`completed_callback`] macro for its implementation.
+#[implement(Microsoft::Web::WebView2::Win32::ICoreWebView2CapturePreviewCompletedHandler)]
+pub struct CapturePreviewCompletedHandler(Option<CapturePreviewCompletedHandlerClosure>);
+
+#[allow(non_snake_case)]
+impl CapturePreviewCompletedHandler {
+    pub fn create(
+        closure: CapturePreviewCompletedHandlerClosure,
+    ) -> ICoreWebView2CapturePreviewCompletedHandler {
+        Self(Some(closure)).into()
+    }
+
+    pub fn wait_for_async_operation(
+        closure: Box<dyn FnOnce(ICoreWebView2CapturePreviewCompletedHandler) -> crate::Result<()>>,
+        completed: CapturePreviewCompletedHandlerClosure,
+    ) -> crate::Result<()> {
+        let (tx, rx) = mpsc::channel();
+        let completed: CapturePreviewCompletedHandlerClosure =
+            Box::new(move |arg_1| -> ::windows::Result<()> {
+                let result = completed(arg_1).map_err(crate::Error::WindowsError);
+                tx.send(result).expect("send over mpsc channel");
+                Ok(())
+            });
+        let callback = Self::create(completed);
+
+        closure(callback)?;
+        wait_with_pump(rx)?
+    }
+
+    fn Invoke<'a>(&mut self, arg_1: <HRESULT as InvokeArg<'a>>::Input) -> ::windows::Result<()> {
+        match self.0.take() {
+            Some(completed) => completed(<HRESULT as InvokeArg<'a>>::convert(arg_1)),
+            None => Ok(()),
+        }
+    }
+}
+
+#[event_callback]
+pub struct WebMessageReceivedEventHandler(
+    ICoreWebView2WebMessageReceivedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2WebMessageReceivedEventArgs>,
+);
+
+#[completed_callback]
+pub struct CallDevToolsProtocolMethodCompletedHandler(
+    ICoreWebView2CallDevToolsProtocolMethodCompletedHandler,
+    HRESULT,
+    PWSTR,
+);
+
+#[event_callback]
+pub struct NewWindowRequestedEventHandler(
+    ICoreWebView2NewWindowRequestedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2NewWindowRequestedEventArgs>,
+);
+
+#[event_callback]
+pub struct DocumentTitleChangedEventHandler(
+    ICoreWebView2DocumentTitleChangedEventHandler,
+    Option<ICoreWebView2>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct ContainsFullScreenElementChangedEventHandler(
+    ICoreWebView2ContainsFullScreenElementChangedEventHandler,
+    Option<ICoreWebView2>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct WebResourceRequestedEventHandler(
+    ICoreWebView2WebResourceRequestedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2WebResourceRequestedEventArgs>,
+);
+
+#[event_callback]
+pub struct WebResourceResponseReceivedEventHandler(
+    ICoreWebView2WebResourceResponseReceivedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2WebResourceResponseReceivedEventArgs>,
+);
+
+#[completed_callback]
+pub struct WebResourceResponseViewGetContentCompletedHandler(
+    ICoreWebView2WebResourceResponseViewGetContentCompletedHandler,
+    HRESULT,
+    Option<IStream>,
+);
+
+#[event_callback]
+pub struct WindowCloseRequestedEventHandler(
+    ICoreWebView2WindowCloseRequestedEventHandler,
+    Option<ICoreWebView2>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct DownloadStartingEventHandler(
+    ICoreWebView2DownloadStartingEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2DownloadStartingEventArgs>,
+);
+
+#[event_callback]
+pub struct BytesReceivedChangedEventHandler(
+    ICoreWebView2BytesReceivedChangedEventHandler,
+    Option<ICoreWebView2DownloadOperation>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct EstimatedEndTimeChangedEventHandler(
+    ICoreWebView2EstimatedEndTimeChangedEventHandler,
+    Option<ICoreWebView2DownloadOperation>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct StateChangedEventHandler(
+    ICoreWebView2StateChangedEventHandler,
+    Option<ICoreWebView2DownloadOperation>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct DevToolsProtocolEventReceivedEventHandler(
+    ICoreWebView2DevToolsProtocolEventReceivedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2DevToolsProtocolEventReceivedEventArgs>,
+);
+
+#[event_callback]
+pub struct FrameCreatedEventHandler(
+    ICoreWebView2FrameCreatedEventHandler,
+    Option<ICoreWebView2>,
+    Option<ICoreWebView2FrameCreatedEventArgs>,
+);
+
+#[event_callback]
+pub struct FrameDestroyedEventHandler(
+    ICoreWebView2FrameDestroyedEventHandler,
+    Option<ICoreWebView2Frame>,
+    Option<IUnknown>,
+);
+
+#[event_callback]
+pub struct FrameNameChangedEventHandler(
+    ICoreWebView2FrameNameChangedEventHandler,
+    Option<ICoreWebView2Frame>,
+    Option<IUnknown>,
+);
+
+#[completed_callback]
+pub struct GetCookiesCompletedHandler(
+    ICoreWebView2GetCookiesCompletedHandler,
+    HRESULT,
+    Option<ICoreWebView2CookieList>,
+);
+
+#[completed_callback]
+pub struct TrySuspendCompletedHandler(ICoreWebView2TrySuspendCompletedHandler, HRESULT, BOOL);
