@@ -378,7 +378,7 @@ impl WebView {
                 let result = WindowsAndMessaging::GetMessageA(&mut msg, h_wnd, 0, 0).0;
 
                 match result {
-                    -1 => break Err(HRESULT::from_thread().into()),
+                    -1 => break Err(windows::Error::from_win32().into()),
                     0 => break Ok(()),
                     _ => match msg.message {
                         WindowsAndMessaging::WM_APP => (),
@@ -667,7 +667,7 @@ fn wait_with_pump<T>(rx: mpsc::Receiver<T>) -> Result<T> {
         unsafe {
             match WindowsAndMessaging::GetMessageA(&mut msg, hwnd, 0, 0).0 {
                 -1 => {
-                    return Err(HRESULT::from_thread().into());
+                    return Err(windows::Error::from_win32().into());
                 }
                 0 => return Err(Error::TaskCanceled),
                 _ => {

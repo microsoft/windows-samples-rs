@@ -12,17 +12,19 @@ fn main() -> Result<()> {
 
         // Start with COM API
         let automation: IUIAutomation = CoCreateInstance(&CUIAutomation, None, CLSCTX_ALL)?;
-        let element: IUIAutomationElement = automation.ElementFromHandle(window.0 as _)?;
+        let element: IUIAutomationElement = automation.ElementFromHandle(window)?;
 
         // Use COM API
         let name = element.get_CurrentName()?;
         println!("window name: {}", name);
 
         // Query for WinRT API (will fail on earlier versions of Windows)
-        let element: AutomationElement = element.cast()?;
+        let element: Result<AutomationElement> = element.cast();
 
-        // Use WinRT API
-        println!("file name: {}", element.ExecutableFileName()?);
+        if let Ok(element) = element {
+            // Use WinRT API
+            println!("file name: {}", element.ExecutableFileName()?);
+        }
     }
 
     Ok(())
