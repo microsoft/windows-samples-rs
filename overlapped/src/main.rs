@@ -4,6 +4,8 @@ use bindings::Windows::Win32::{
     System::{Diagnostics::Debug::*, SystemServices::*, Threading::*},
 };
 
+use windows::*;
+
 fn main() -> windows::Result<()> {
     unsafe {
         let mut filename = std::env::current_dir().unwrap();
@@ -19,9 +21,7 @@ fn main() -> windows::Result<()> {
             None,
         );
 
-        if file.is_invalid() {
-            windows::HRESULT::from_thread().ok()?;
-        }
+        file.ok()?;
 
         let mut overlapped = OVERLAPPED {
             Anonymous: OVERLAPPED_0 {
@@ -35,7 +35,8 @@ fn main() -> windows::Result<()> {
             InternalHigh: 0,
         };
 
-        assert!(overlapped.hEvent.0 != 0);
+        overlapped.hEvent.ok()?;
+
         let mut buffer: [u8; 12] = Default::default();
 
         let read_ok = ReadFile(

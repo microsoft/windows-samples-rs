@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-windows = "0.19"
+windows = "0.20"
 bindings = { path = "bindings" }
 callback_macros = { path = "callback-macros" }
 serde = { version = "1.0.125", features = ["derive"] }

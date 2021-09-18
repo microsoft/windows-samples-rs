@@ -518,7 +518,7 @@ fn create_factory() -> Result<ID2D1Factory1> {
             D2D1_FACTORY_TYPE_SINGLE_THREADED,
             &ID2D1Factory1::IID,
             &options,
-            result.set_abi(),
+            std::mem::transmute(&mut result),
         )
         .map(|()| result.unwrap())
     }

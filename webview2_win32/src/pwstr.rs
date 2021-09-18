@@ -4,7 +4,7 @@ use bindings::Windows::Win32::{Foundation::PWSTR, System::Com};
 
 /// Copy a [`PWSTR`] from an input param to a [`String`].
 pub fn string_from_pwstr(source: PWSTR) -> String {
-    if source.is_null() {
+    if source.0.is_null() {
         String::new()
     } else {
         let mut buffer = Vec::new();
@@ -26,7 +26,7 @@ pub fn string_from_pwstr(source: PWSTR) -> String {
 pub fn take_pwstr(source: PWSTR) -> String {
     let result = string_from_pwstr(source);
 
-    if !source.is_null() {
+    if !source.0.is_null() {
         unsafe {
             Com::CoTaskMemFree(mem::transmute(source.0));
         }

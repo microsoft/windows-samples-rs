@@ -50,7 +50,7 @@ where
     S: DXSample,
 {
     let instance = unsafe { GetModuleHandleA(None) };
-    debug_assert!(!instance.is_null());
+    debug_assert!(!instance.is_invalid());
 
     let wc = WNDCLASSEXA {
         cbSize: std::mem::size_of::<WNDCLASSEXA>() as u32,
@@ -100,7 +100,7 @@ where
             &mut sample as *mut _ as _,
         )
     };
-    debug_assert!(!hwnd.is_null());
+    debug_assert!(!hwnd.is_invalid());
 
     sample.bind_to_window(&hwnd)?;
 
@@ -230,7 +230,7 @@ fn get_hardware_adapter(factory: &IDXGIFactory4) -> Result<IDXGIAdapter1> {
         // create the actual device yet.
         if unsafe {
             D3D12CreateDevice(
-                adapter.abi(),
+                std::mem::transmute_copy(&adapter),
                 D3D_FEATURE_LEVEL_11_0,
                 &ID3D12Device::IID,
                 std::ptr::null_mut(),
@@ -536,13 +536,12 @@ mod d3d12_hello_triangle {
             Type: D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
             Flags: D3D12_RESOURCE_BARRIER_FLAG_NONE,
             Anonymous: D3D12_RESOURCE_BARRIER_0 {
-                Transition: D3D12_RESOURCE_TRANSITION_BARRIER {
+                Transition: std::mem::ManuallyDrop::new(D3D12_RESOURCE_TRANSITION_BARRIER {
                     pResource: Some(resource.clone()),
                     StateBefore: state_before,
                     StateAfter: state_after,
                     Subresource: D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-                }
-                .abi(),
+                }),
             },
         }
     }
