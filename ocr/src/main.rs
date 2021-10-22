@@ -1,14 +1,15 @@
-use bindings::{
-    Windows::Graphics::Imaging::BitmapDecoder,
-    Windows::Media::Ocr::OcrEngine,
-    Windows::Storage::{FileAccessMode, StorageFile},
+use windows::{
+    runtime::*,
+    Graphics::Imaging::BitmapDecoder,
+    Media::Ocr::OcrEngine,
+    Storage::{FileAccessMode, StorageFile},
 };
 
-fn main() -> windows::Result<()> {
+fn main() -> Result<()> {
     futures::executor::block_on(main_async())
 }
 
-async fn main_async() -> windows::Result<()> {
+async fn main_async() -> Result<()> {
     let mut message = std::env::current_dir().unwrap();
     message.push("message.png");
 
