@@ -1,11 +1,17 @@
-use bindings::Windows::Win32::{
-    Foundation::*,
-    Graphics::{Direct3D11::*, Direct3D12::*, Dxgi::*, Hlsl::*},
-    System::{LibraryLoader::*, Threading::*, WindowsProgramming::*},
-    UI::WindowsAndMessaging::*,
+use windows::{
+    runtime::*,
+    Win32::Foundation::*,
+    Win32::Graphics::Direct3D11::*, 
+    Win32::Graphics::Direct3D12::*, 
+    Win32::Graphics::Dxgi::*, 
+    Win32::Graphics::Hlsl::*,
+    Win32::System::LibraryLoader::*,
+    Win32::System::Threading::*, 
+    Win32::System::WindowsProgramming::*,
+    Win32::UI::WindowsAndMessaging::*,
 };
+
 use std::mem::transmute;
-use windows::*;
 
 trait DXSample {
     fn new(command_line: &SampleCommandLine) -> Result<Self>
@@ -219,11 +225,11 @@ fn get_hardware_adapter(factory: &IDXGIFactory4) -> Result<IDXGIAdapter1> {
         #[link(name = "d3d12")]
         extern "system" {
             pub fn D3D12CreateDevice(
-                padapter: ::windows::RawPtr,
+                padapter: ::windows::runtime::RawPtr,
                 minimumfeaturelevel: D3D_FEATURE_LEVEL,
-                riid: *const ::windows::Guid,
+                riid: *const ::windows::runtime::GUID,
                 ppdevice: *mut *mut ::std::ffi::c_void,
-            ) -> ::windows::HRESULT;
+            ) -> ::windows::runtime::HRESULT;
         }
 
         // Check to see whether the adapter supports Direct3D 12, but don't
@@ -549,7 +555,8 @@ mod d3d12_hello_triangle {
     fn create_device(command_line: &SampleCommandLine) -> Result<(IDXGIFactory4, ID3D12Device)> {
         if cfg!(debug_assertions) {
             unsafe {
-                if let Ok(debug) = D3D12GetDebugInterface::<ID3D12Debug>() {
+                let mut debug: Option<ID3D12Debug> = None;
+                if let Some(debug) = D3D12GetDebugInterface(&mut debug).ok().and_then(|_|debug) {
                     debug.EnableDebugLayer();
                 }
             }
@@ -569,8 +576,9 @@ mod d3d12_hello_triangle {
             get_hardware_adapter(&dxgi_factory)
         }?;
 
-        let device = unsafe { D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0) }?;
-        Ok((dxgi_factory, device))
+        let mut device: Option<ID3D12Device> = None;
+        unsafe { D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, &mut device) }?;
+        Ok((dxgi_factory, device.unwrap()))
     }
 
     fn create_root_signature(device: &ID3D12Device) -> Result<ID3D12RootSignature> {
@@ -747,7 +755,8 @@ mod d3d12_hello_triangle {
         // marshalled over. Please read up on Default Heap usage. An upload heap
         // is used here for code simplicity and because there are very few verts
         // to actually transfer.
-        let vertex_buffer: ID3D12Resource = unsafe {
+        let mut vertex_buffer: Option<ID3D12Resource> = None; 
+        unsafe {
             device.CreateCommittedResource(
                 &D3D12_HEAP_PROPERTIES {
                     Type: D3D12_HEAP_TYPE_UPLOAD,
@@ -769,8 +778,10 @@ mod d3d12_hello_triangle {
                 },
                 D3D12_RESOURCE_STATE_GENERIC_READ,
                 std::ptr::null(),
+                &mut vertex_buffer
             )?
         };
+        let vertex_buffer = vertex_buffer.unwrap();
 
         // Copy the triangle data to the vertex buffer.
         unsafe {

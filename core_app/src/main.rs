@@ -2,9 +2,11 @@
 
 use windows::{
     runtime::*,
-    Windows::ApplicationModel::Core::*,
-     Windows::UI::Core::*
+    ApplicationModel::Core::*,
+    UI::Core::*
 };
+
+use windows as Windows;
 
 #[implement(Windows::ApplicationModel::Core::IFrameworkViewSource)]
 struct CoreApp();

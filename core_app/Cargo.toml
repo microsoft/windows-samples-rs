@@ -4,8 +4,9 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies.windows]
-path = "/git/windows-rs"
+git = "https://github.com/microsoft/windows-rs"
 features = [
-    "Windows_ApplicationModel_Core",
-    "Windows_UI_Core",
+    "build",
+    "ApplicationModel_Core",
+    "UI_Core",
 ]

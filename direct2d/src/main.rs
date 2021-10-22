@@ -1,16 +1,10 @@
-use bindings::{
-    Windows::Foundation::Numerics::*,
-    Windows::Win32::System::Com::*,
-    Windows::Win32::{
-        Foundation::*,
-        Graphics::{Direct2D::*, Direct3D11::*, Dxgi::*, Gdi::*},
-        System::{LibraryLoader::*, Performance::*, SystemInformation::GetLocalTime},
-        UI::Animation::*,
-        UI::WindowsAndMessaging::*,
-    },
+use windows::{
+    runtime::*, Foundation::Numerics::*, Win32::Foundation::*, Win32::Graphics::Direct2D::*,
+    Win32::Graphics::Direct3D11::*, Win32::Graphics::Dxgi::*, Win32::Graphics::Gdi::*,
+    Win32::System::Com::*, Win32::System::LibraryLoader::*, Win32::System::Performance::*,
+    Win32::System::SystemInformation::GetLocalTime, Win32::UI::Animation::*,
+    Win32::UI::WindowsAndMessaging::*,
 };
-
-use windows::*;
 
 fn main() -> Result<()> {
     unsafe {
