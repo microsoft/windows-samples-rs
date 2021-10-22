@@ -1,14 +1,8 @@
 use windows::{
-    runtime::*,
-    Win32::Foundation::*,
-    Win32::Graphics::Direct3D11::*, 
-    Win32::Graphics::Direct3D12::*, 
-    Win32::Graphics::Dxgi::*, 
-    Win32::Graphics::Hlsl::*,
-    Win32::System::LibraryLoader::*,
-    Win32::System::Threading::*, 
-    Win32::System::WindowsProgramming::*,
-    Win32::UI::WindowsAndMessaging::*,
+    runtime::*, Win32::Foundation::*, Win32::Graphics::Direct3D11::*,
+    Win32::Graphics::Direct3D12::*, Win32::Graphics::Dxgi::*, Win32::Graphics::Hlsl::*,
+    Win32::System::LibraryLoader::*, Win32::System::Threading::*,
+    Win32::System::WindowsProgramming::*, Win32::UI::WindowsAndMessaging::*,
 };
 
 use std::mem::transmute;
@@ -556,7 +550,7 @@ mod d3d12_hello_triangle {
         if cfg!(debug_assertions) {
             unsafe {
                 let mut debug: Option<ID3D12Debug> = None;
-                if let Some(debug) = D3D12GetDebugInterface(&mut debug).ok().and_then(|_|debug) {
+                if let Some(debug) = D3D12GetDebugInterface(&mut debug).ok().and_then(|_| debug) {
                     debug.EnableDebugLayer();
                 }
             }
@@ -755,7 +749,7 @@ mod d3d12_hello_triangle {
         // marshalled over. Please read up on Default Heap usage. An upload heap
         // is used here for code simplicity and because there are very few verts
         // to actually transfer.
-        let mut vertex_buffer: Option<ID3D12Resource> = None; 
+        let mut vertex_buffer: Option<ID3D12Resource> = None;
         unsafe {
             device.CreateCommittedResource(
                 &D3D12_HEAP_PROPERTIES {
@@ -778,7 +772,7 @@ mod d3d12_hello_triangle {
                 },
                 D3D12_RESOURCE_STATE_GENERIC_READ,
                 std::ptr::null(),
-                &mut vertex_buffer
+                &mut vertex_buffer,
             )?
         };
         let vertex_buffer = vertex_buffer.unwrap();

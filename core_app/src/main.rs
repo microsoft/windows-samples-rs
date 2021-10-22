@@ -1,10 +1,6 @@
 #![windows_subsystem = "windows"]
 
-use windows::{
-    runtime::*,
-    ApplicationModel::Core::*,
-    UI::Core::*
-};
+use windows::{runtime::*, ApplicationModel::Core::*, UI::Core::*};
 
 use windows as Windows;
 
