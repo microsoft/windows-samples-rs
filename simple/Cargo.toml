@@ -3,8 +3,8 @@ name = "sample"
 version = "0.0.0"
 edition = "2018"
 
-[dependencies]
-windows = "0.20"
-
-[build-dependencies]
-windows = "0.20"
+[dependencies.windows]
+git = "https://github.com/microsoft/windows-rs"
+features = [
+    "UI",
+]

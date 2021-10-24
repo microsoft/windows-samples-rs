@@ -3,6 +3,11 @@ name = "create-window"
 version = "0.0.0"
 edition = "2018"
 
-[dependencies]
-bindings = { path = "bindings" }
-windows = "0.20"
+[dependencies.windows]
+git = "https://github.com/microsoft/windows-rs"
+features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_System_LibraryLoader",
+    "Win32_UI_WindowsAndMessaging",
+]

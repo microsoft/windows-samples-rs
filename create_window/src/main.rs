@@ -1,9 +1,7 @@
-use bindings::Windows::Win32::{
-    Foundation::*, Graphics::Gdi::ValidateRect, System::LibraryLoader::GetModuleHandleA,
-    UI::WindowsAndMessaging::*,
+use windows::{
+    runtime::*, Win32::Foundation::*, Win32::Graphics::Gdi::ValidateRect,
+    Win32::System::LibraryLoader::GetModuleHandleA, Win32::UI::WindowsAndMessaging::*,
 };
-
-use windows::*;
 
 fn main() -> Result<()> {
     unsafe {

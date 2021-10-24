@@ -1,9 +1,8 @@
 #![windows_subsystem = "windows"]
 
-use bindings::*;
-use windows::*;
+use windows::{runtime::*, ApplicationModel::Core::*, UI::Core::*};
 
-use bindings::{Windows::ApplicationModel::Core::*, Windows::UI::Core::*};
+use windows as Windows;
 
 #[implement(Windows::ApplicationModel::Core::IFrameworkViewSource)]
 struct CoreApp();

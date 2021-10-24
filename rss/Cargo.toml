@@ -3,6 +3,9 @@ name = "sample"
 version = "0.0.0"
 edition = "2018"
 
-[dependencies]
-windows = "0.20"
-bindings = { path = "bindings" }
+[dependencies.windows]
+git = "https://github.com/microsoft/windows-rs"
+features = [
+    "Foundation_Collections",
+    "Web_Syndication",
+]

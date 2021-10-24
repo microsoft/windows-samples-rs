@@ -1,12 +1,9 @@
-use bindings::Windows::Win32::{
-    Foundation::*,
-    Storage::FileSystem::*,
-    System::{Diagnostics::Debug::*, SystemServices::*, Threading::*},
+use windows::{
+    runtime::*, Win32::Foundation::*, Win32::Storage::FileSystem::*,
+    Win32::System::SystemServices::*, Win32::System::Threading::*,
 };
 
-use windows::*;
-
-fn main() -> windows::Result<()> {
+fn main() -> Result<()> {
     unsafe {
         let mut filename = std::env::current_dir().unwrap();
         filename.push("message.txt");

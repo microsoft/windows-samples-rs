@@ -1,5 +1,4 @@
-use bindings::{Windows::Foundation::*, Windows::Win32::System::WinRT::IMemoryBufferByteAccess};
-use windows::*;
+use windows::{runtime::*, Foundation::*, Win32::System::WinRT::IMemoryBufferByteAccess};
 
 // This example illustrates how to use IMemoryBufferByteAccess to access the underlying buffer
 // owned by the MemoryBuffer/IMemoryBufferReference. Note that this is inherently unsafe as

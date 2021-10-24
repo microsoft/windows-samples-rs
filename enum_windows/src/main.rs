@@ -1,9 +1,9 @@
-use bindings::Windows::Win32::{
-    Foundation::{BOOL, HWND, LPARAM, PWSTR},
-    UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW},
+use windows::{
+    Win32::Foundation::{BOOL, HWND, LPARAM, PWSTR},
+    Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW},
 };
 
-fn main() -> windows::Result<()> {
+fn main() -> windows::runtime::Result<()> {
     unsafe { EnumWindows(Some(enum_window), LPARAM(0)).ok() }
 }
 

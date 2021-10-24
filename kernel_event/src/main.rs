@@ -1,9 +1,9 @@
-use bindings::Windows::Win32::{
-    Foundation::CloseHandle,
-    System::Threading::{CreateEventW, SetEvent, WaitForSingleObject, WAIT_OBJECT_0},
+use windows::{
+    Win32::Foundation::CloseHandle,
+    Win32::System::Threading::{CreateEventW, SetEvent, WaitForSingleObject, WAIT_OBJECT_0},
 };
 
-fn main() -> windows::Result<()> {
+fn main() -> windows::runtime::Result<()> {
     unsafe {
         let event = CreateEventW(std::ptr::null_mut(), true, false, None);
 
