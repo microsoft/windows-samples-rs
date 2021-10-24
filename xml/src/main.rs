@@ -1,6 +1,6 @@
-use bindings::Windows::Data::Xml::Dom::XmlDocument;
+use windows::Data::Xml::Dom::XmlDocument;
 
-fn main() -> windows::Result<()> {
+fn main() -> windows::runtime::Result<()> {
     let doc = XmlDocument::new()?;
     doc.LoadXml("<html>hello world</html>")?;
 

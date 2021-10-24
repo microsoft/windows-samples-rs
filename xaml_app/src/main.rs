@@ -1,14 +1,13 @@
 #![windows_subsystem = "windows"]
 
-use bindings::*;
-use windows::*;
-
-use bindings::{
-    Windows::ApplicationModel::Activation::LaunchActivatedEventArgs,
-    Windows::Win32::System::Com::*,
-    Windows::UI::Xaml::Controls::TextBox,
-    Windows::UI::Xaml::{Application, ApplicationInitializationCallback, Window},
+use windows::{
+    ApplicationModel::Activation::LaunchActivatedEventArgs,
+    Win32::System::Com::*,
+    UI::Xaml::Controls::TextBox,
+    UI::Xaml::{Application, ApplicationInitializationCallback, Window},
 };
+
+use windows as Windows;
 
 #[implement(
     extend Windows::UI::Xaml::Application,

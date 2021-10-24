@@ -3,6 +3,11 @@ name = "sample"
 version = "0.0.0"
 edition = "2018"
 
-[dependencies]
-windows = "0.20"
-bindings = { path = "bindings" }
+[dependencies.windows]
+git = "https://github.com/microsoft/windows-rs"
+features = [
+    "ApplicationModel_Activation",
+    "Win32_System_Com",
+    "UI_Xaml_Controls",
+    "UI_Xaml",
+]
