@@ -4,8 +4,7 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies.windows]
-#git = "https://github.com/microsoft/windows-rs"
-path = "/git/windows-rs"
+git = "https://github.com/microsoft/windows-rs"
 features = [
     "build",
     "ApplicationModel_Activation",

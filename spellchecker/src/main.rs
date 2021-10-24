@@ -1,9 +1,4 @@
-use windows::{
-    runtime::*,
-Win32::System::Com::*,
-Win32::Foundation::*,
-Win32::Globalization::*,
-};
+use windows::{runtime::*, Win32::Foundation::*, Win32::Globalization::*, Win32::System::Com::*};
 
 fn main() -> Result<()> {
     let input = std::env::args()

@@ -1,9 +1,6 @@
 use windows::{
-    runtime::*,
-    Win32::Foundation::*,
-    Win32::Storage::FileSystem::*,
-    Win32::System::Diagnostics::Debug::*, 
-    Win32::System::SystemServices::*, 
+    runtime::*, Win32::Foundation::*, Win32::Storage::FileSystem::*,
+    Win32::System::Diagnostics::Debug::*, Win32::System::SystemServices::*,
     Win32::System::Threading::*,
 };
 
