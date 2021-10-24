@@ -1,9 +1,5 @@
-mod bindings {
-    windows::include_bindings!();
-}
-
-fn main() -> windows::Result<()> {
-    use bindings::Windows::UI::Colors;
+fn main() -> windows::runtime::Result<()> {
+    use windows::UI::Colors;
 
     let red = Colors::Red()?;
     println!("Red: {:?}", red);

@@ -3,6 +3,10 @@ name = "sample"
 version = "0.0.0"
 edition = "2018"
 
-[dependencies]
-windows = "0.20"
-bindings = { path = "bindings" }
+[dependencies.windows]
+git = "https://github.com/microsoft/windows-rs"
+features = [
+"Win32_System_Com",
+"Win32_Foundation",
+"Win32_Globalization",
+]

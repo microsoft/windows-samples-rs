@@ -1,10 +1,11 @@
-use bindings::Windows::Win32;
-use bindings::Windows::Win32::System::Com::*;
-use Win32::Foundation::PWSTR;
-use Win32::Globalization;
-use Win32::System::Com::CoTaskMemFree;
+use windows::{
+    runtime::*,
+Win32::System::Com::*,
+Win32::Foundation::*,
+Win32::Globalization::*,
+};
 
-fn main() -> windows::Result<()> {
+fn main() -> Result<()> {
     let input = std::env::args()
         .nth(1)
         .expect("Expected one command line argument for text to be spell-corrected");
@@ -14,8 +15,8 @@ fn main() -> windows::Result<()> {
     }
 
     // Create ISpellCheckerFactory
-    let factory: Globalization::ISpellCheckerFactory =
-        unsafe { CoCreateInstance(&Globalization::SpellCheckerFactory, None, CLSCTX_ALL)? };
+    let factory: ISpellCheckerFactory =
+        unsafe { CoCreateInstance(&SpellCheckerFactory, None, CLSCTX_ALL)? };
 
     // Make sure that the "en-US" locale is supported
     let locale = "en-US";
@@ -32,23 +33,23 @@ fn main() -> windows::Result<()> {
     // Loop through all the errors
     while let Ok(error) = unsafe { errors.Next() } {
         // Get the start index and length of the error
-        let start_index = unsafe { error.get_StartIndex()? };
-        let length = unsafe { error.get_Length()? };
+        let start_index = unsafe { error.StartIndex()? };
+        let length = unsafe { error.Length()? };
 
         // Get the substring from the utf8 encoded string
         let substring = &input[start_index as usize..(start_index + length) as usize];
 
         // Get the corrective action
-        let action = unsafe { error.get_CorrectiveAction()? };
+        let action = unsafe { error.CorrectiveAction()? };
         println!("{:?}", action);
 
         match action {
-            Globalization::CORRECTIVE_ACTION_DELETE => {
+            CORRECTIVE_ACTION_DELETE => {
                 println!("Delete '{}'", substring);
             }
-            Globalization::CORRECTIVE_ACTION_REPLACE => {
+            CORRECTIVE_ACTION_REPLACE => {
                 // Get the replacement as a widestring and convert to a Rust String
-                let replacement = unsafe { error.get_Replacement()? };
+                let replacement = unsafe { error.Replacement()? };
 
                 println!("Replace: {} with {}", substring, unsafe {
                     read_to_string(replacement)
@@ -56,7 +57,7 @@ fn main() -> windows::Result<()> {
 
                 unsafe { CoTaskMemFree(replacement.0 as *mut _) };
             }
-            Globalization::CORRECTIVE_ACTION_GET_SUGGESTIONS => {
+            CORRECTIVE_ACTION_GET_SUGGESTIONS => {
                 // Get an enumerator for all the suggestions for a substring
                 let suggestions = unsafe { checker.Suggest(substring)? };
 
