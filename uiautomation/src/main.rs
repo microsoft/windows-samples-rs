@@ -1,9 +1,10 @@
-use bindings::*;
-use windows::*;
-use Windows::Win32::System::Com::*;
-use Windows::Win32::UI::Accessibility::*;
-use Windows::Win32::UI::WindowsAndMessaging::*;
-use Windows::UI::UIAutomation::*;
+use windows::{
+    runtime::*,
+Win32::System::Com::*,
+Win32::UI::Accessibility::*,
+Win32::UI::WindowsAndMessaging::*,
+UI::UIAutomation::*,
+};
 
 fn main() -> Result<()> {
     unsafe {
@@ -15,7 +16,7 @@ fn main() -> Result<()> {
         let element: IUIAutomationElement = automation.ElementFromHandle(window)?;
 
         // Use COM API
-        let name = element.get_CurrentName()?;
+        let name = element.CurrentName()?;
         println!("window name: {}", name);
 
         // Query for WinRT API (will fail on earlier versions of Windows)
