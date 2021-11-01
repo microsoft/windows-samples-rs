@@ -1,4 +1,4 @@
-name: Build and Test
+name: CI
 
 on:
   pull_request:
@@ -33,7 +33,7 @@ jobs:
         "::set-output name=crate::$crates"
 
   test:
-    name: Build and test crate
+    name: Test
     runs-on: ${{ matrix.os }}
     needs:
       - gen_matrix
