@@ -7,7 +7,7 @@ edition = "2018"
 array-init = "2.0.0"
 
 [dependencies.windows]
-git = "https://github.com/microsoft/windows-rs"
+version = "0.24"
 features = [
     "Win32_Foundation",
     "Win32_Graphics_Direct3D11",
