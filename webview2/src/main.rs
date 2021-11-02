@@ -9,18 +9,14 @@ use std::{
 
 use serde::Deserialize;
 use serde_json::{Number, Value};
-use windows::*;
+use windows::runtime::*;
 
 use bindings::{
-    Microsoft::Web::WebView2::Core::*,
-    Windows::Foundation::*,
-    Windows::Win32::System::Com::*,
-    Windows::Win32::{
-        Foundation::*,
-        Graphics::Gdi::*,
-        System::{LibraryLoader::*, Threading::*},
-        UI::{HiDpi::*, KeyboardAndMouseInput::*, WindowsAndMessaging::*},
-    },
+    Microsoft::Web::WebView2::Core::*, Windows::Foundation::*, Windows::Win32::Foundation::*,
+    Windows::Win32::Graphics::Gdi::*, Windows::Win32::System::Com::*,
+    Windows::Win32::System::LibraryLoader::*, Windows::Win32::System::Threading::*,
+    Windows::Win32::UI::HiDpi::*, Windows::Win32::UI::Input::KeyboardAndMouse::*,
+    Windows::Win32::UI::WindowsAndMessaging::*,
 };
 
 fn main() -> Result<()> {
@@ -62,7 +58,7 @@ fn main() -> Result<()> {
 
 #[derive(Debug)]
 pub enum Error {
-    WindowsError(windows::Error),
+    WindowsError(windows::runtime::Error),
     JsonError(serde_json::Error),
     CallbackError(String),
     TaskCanceled,
@@ -70,15 +66,15 @@ pub enum Error {
     SendError,
 }
 
-impl From<windows::Error> for Error {
-    fn from(err: windows::Error) -> Self {
+impl From<windows::runtime::Error> for Error {
+    fn from(err: windows::runtime::Error) -> Self {
         Self::WindowsError(err)
     }
 }
 
 impl From<HRESULT> for Error {
     fn from(err: HRESULT) -> Self {
-        Self::WindowsError(windows::Error::fast_error(err))
+        Self::WindowsError(windows::runtime::Error::fast_error(err))
     }
 }
 
@@ -349,7 +345,7 @@ impl WebView {
                 let result = GetMessageA(&mut msg, h_wnd, 0, 0).0;
 
                 match result {
-                    -1 => break Err(windows::Error::from_win32().into()),
+                    -1 => break Err(windows::runtime::Error::from_win32().into()),
                     0 => break Ok(()),
                     _ => match msg.message {
                         WM_APP => (),
@@ -626,7 +622,7 @@ fn wait_with_pump<T>(rx: mpsc::Receiver<T>) -> Result<T> {
         unsafe {
             match GetMessageA(&mut msg, hwnd, 0, 0).0 {
                 -1 => {
-                    return Err(windows::Error::from_win32().into());
+                    return Err(windows::runtime::Error::from_win32().into());
                 }
                 0 => return Err(Error::TaskCanceled),
                 _ => {
