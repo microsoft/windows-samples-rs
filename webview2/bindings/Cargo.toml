@@ -4,10 +4,10 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-windows = { path = "/git/windows-rs", features = ["build"] }
+windows = { version = "0.26", features = ["build"] }
 
 [build-dependencies]
-windows = { path = "/git/windows-rs", features = ["build"] }
+windows = { version = "0.26", features = ["build"] }
 
 [features]
 default = ["std"]

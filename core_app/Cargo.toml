@@ -4,8 +4,8 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies.windows]
-#path = "/git/windows-rs"
-path = "/git/windows-rs"
+#version = "0.26"
+version = "0.26"
 features = [
     "build",
     "ApplicationModel_Core",
