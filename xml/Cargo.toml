@@ -6,5 +6,6 @@ edition = "2018"
 [dependencies.windows]
 path = "/git/windows-rs"
 features = [
+    "std",
     "Data_Xml_Dom",
 ]
