@@ -4,9 +4,10 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies.windows]
-version = "0.24"
+version = "0.26"
 features = [
-"Win32_System_Com",
-"Win32_Foundation",
-"Win32_Globalization",
+    "std",
+    "Win32_System_Com",
+    "Win32_Foundation",
+    "Win32_Globalization",
 ]
