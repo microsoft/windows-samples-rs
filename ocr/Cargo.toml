@@ -10,6 +10,7 @@ futures = "0.3.5"
 #path = "/git/windows-rs"
 path = "/git/windows-rs"
 features = [
+    "std",
     "Media_Ocr", 
     "Graphics_Imaging", 
     "Storage_Streams", 

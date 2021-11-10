@@ -8,3 +8,7 @@ windows = { path = "/git/windows-rs", features = ["build"] }
 
 [build-dependencies]
 windows = { path = "/git/windows-rs", features = ["build"] }
+
+[features]
+default = ["std"]
+std = []

@@ -6,7 +6,8 @@ edition = "2018"
 [dependencies.windows]
 path = "/git/windows-rs"
 features = [
-"Win32_System_Com",
-"Win32_Foundation",
-"Win32_Globalization",
+    "std",
+    "Win32_System_Com",
+    "Win32_Foundation",
+    "Win32_Globalization",
 ]
