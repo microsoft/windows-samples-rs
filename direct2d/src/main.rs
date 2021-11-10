@@ -1,6 +1,6 @@
 use windows::{
-    runtime::*, Foundation::Numerics::*, Win32::Foundation::*, Win32::Graphics::Direct2D::*,
-    Win32::Graphics::Direct3D11::*, Win32::Graphics::Dxgi::*, Win32::Graphics::Gdi::*,
+    runtime::*, Foundation::Numerics::*, Win32::Foundation::*, Win32::Graphics::Direct2D::*, Win32::Graphics::Direct2D::Common::*,
+    Win32::Graphics::Direct3D::*, Win32::Graphics::Direct3D11::*, Win32::Graphics::Dxgi::*, Win32::Graphics::Gdi::*, Win32::Graphics::Dxgi::Common::*,
     Win32::System::Com::*, Win32::System::LibraryLoader::*, Win32::System::Performance::*,
     Win32::System::SystemInformation::GetLocalTime, Win32::UI::Animation::*,
     Win32::UI::WindowsAndMessaging::*,
@@ -399,8 +399,8 @@ impl Window {
 
             let handle = CreateWindowExA(
                 Default::default(),
-                "window",
-                "Sample Window",
+                PSTR(b"window\0".as_ptr() as _),
+                PSTR(b"Sample Window\0".as_ptr() as _),
                 WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
