@@ -1,7 +1,7 @@
 use windows::{
-    runtime::*, Win32::Foundation::*, Win32::Graphics::Direct3D::Fxc::*,
-    Win32::Graphics::Direct3D::*, Win32::Graphics::Direct3D12::*, Win32::Graphics::Dxgi::Common::*,
-    Win32::Graphics::Dxgi::*, Win32::System::LibraryLoader::*, Win32::System::Threading::*,
+    core::*, Win32::Foundation::*, Win32::Graphics::Direct3D::Fxc::*, Win32::Graphics::Direct3D::*,
+    Win32::Graphics::Direct3D12::*, Win32::Graphics::Dxgi::Common::*, Win32::Graphics::Dxgi::*,
+    Win32::System::LibraryLoader::*, Win32::System::Threading::*,
     Win32::System::WindowsProgramming::*, Win32::UI::WindowsAndMessaging::*,
 };
 
@@ -219,11 +219,11 @@ fn get_hardware_adapter(factory: &IDXGIFactory4) -> Result<IDXGIAdapter1> {
         #[link(name = "d3d12")]
         extern "system" {
             pub fn D3D12CreateDevice(
-                padapter: ::windows::runtime::RawPtr,
+                padapter: ::windows::core::RawPtr,
                 minimumfeaturelevel: D3D_FEATURE_LEVEL,
-                riid: *const ::windows::runtime::GUID,
+                riid: *const ::windows::core::GUID,
                 ppdevice: *mut *mut ::std::ffi::c_void,
-            ) -> ::windows::runtime::HRESULT;
+            ) -> ::windows::core::HRESULT;
         }
 
         // Check to see whether the adapter supports Direct3D 12, but don't

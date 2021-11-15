@@ -4,9 +4,9 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies.windows]
-version = "0.26"
+version = "0.27"
 features = [
-    "std",
+    "alloc",
     "Win32_Foundation",
     "Win32_Graphics_Gdi",
     "Win32_System_LibraryLoader",

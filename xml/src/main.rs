@@ -1,6 +1,6 @@
 use windows::Data::Xml::Dom::XmlDocument;
 
-fn main() -> windows::runtime::Result<()> {
+fn main() -> windows::core::Result<()> {
     let doc = XmlDocument::new()?;
     doc.LoadXml("<html>hello world</html>")?;
 

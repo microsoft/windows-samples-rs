@@ -7,10 +7,11 @@ edition = "2018"
 futures = "0.3.5"
 
 [dependencies.windows]
-#version = "0.26"
-version = "0.26"
+#version = "0.27"
+version = "0.27"
 features = [
     "std",
+    "alloc",
     "Media_Ocr", 
     "Graphics_Imaging", 
     "Storage_Streams", 

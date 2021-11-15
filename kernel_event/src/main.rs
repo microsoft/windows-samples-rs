@@ -3,7 +3,7 @@ use windows::{
     Win32::System::Threading::{CreateEventW, SetEvent, WaitForSingleObject, WAIT_OBJECT_0},
 };
 
-fn main() -> windows::runtime::Result<()> {
+fn main() -> windows::core::Result<()> {
     unsafe {
         let event = CreateEventW(std::ptr::null_mut(), true, false, None);
 

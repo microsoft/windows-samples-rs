@@ -1,5 +1,5 @@
 use windows::{
-    runtime::*, Win32::Foundation::*, Win32::Storage::FileSystem::*, Win32::System::Threading::*,
+    core::*, Win32::Foundation::*, Win32::Storage::FileSystem::*, Win32::System::Threading::*,
     Win32::System::IO::*,
 };
 

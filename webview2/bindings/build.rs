@@ -1,5 +1,5 @@
 fn main() {
-    windows::runtime::build! {
+    windows::core::build! {
         Microsoft::Web::WebView2::Core::*,
         Windows::Foundation::*,
         Windows::Win32::Foundation::{HINSTANCE, LRESULT, POINT, PWSTR, RECT, SIZE},

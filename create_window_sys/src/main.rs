@@ -1,50 +1,51 @@
-use windows::{
-    core::*, Win32::Foundation::*, Win32::Graphics::Gdi::ValidateRect,
+use windows_sys::{
+    Win32::Foundation::*, Win32::Graphics::Gdi::ValidateRect, Win32::Graphics::Gdi::*,
     Win32::System::LibraryLoader::GetModuleHandleA, Win32::UI::WindowsAndMessaging::*,
 };
 
-fn main() -> Result<()> {
+fn main() {
     unsafe {
-        let instance = GetModuleHandleA(None);
+        let instance = GetModuleHandleA(PSTR(std::ptr::null_mut()));
         debug_assert!(instance.0 != 0);
 
-        let window_class = "window";
+        let window_class = PSTR(b"window\0".as_ptr() as _);
 
         let wc = WNDCLASSA {
-            hCursor: LoadCursorW(None, IDC_ARROW),
+            hCursor: LoadCursorW(HINSTANCE(0), IDC_ARROW),
             hInstance: instance,
-            lpszClassName: PSTR(b"window\0".as_ptr() as _),
-
-            style: CS_HREDRAW | CS_VREDRAW,
-            lpfnWndProc: Some(wndproc),
-            ..Default::default()
+            lpszClassName: window_class,
+            style: WNDCLASS_STYLES(CS_HREDRAW.0 | CS_VREDRAW.0),
+            lpfnWndProc: wndproc,
+            cbClsExtra: 0,
+            cbWndExtra: 0,
+            hIcon: HICON(0),
+            hbrBackground: HBRUSH(0),
+            lpszMenuName: PSTR(std::ptr::null_mut()),
         };
 
         let atom = RegisterClassA(&wc);
         debug_assert!(atom != 0);
 
         CreateWindowExA(
-            Default::default(),
+            WINDOW_EX_STYLE(0),
             window_class,
-            "This is a sample window",
-            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            PSTR(b"This is a sample window".as_ptr() as _),
+            WINDOW_STYLE(WS_OVERLAPPEDWINDOW.0 | WS_VISIBLE.0),
             CW_USEDEFAULT,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
-            None,
-            None,
+            HWND(0),
+            HMENU(0),
             instance,
             std::ptr::null_mut(),
         );
 
-        let mut message = MSG::default();
+        let mut message = std::mem::zeroed();
 
-        while GetMessageA(&mut message, HWND(0), 0, 0).into() {
+        while GetMessageA(&mut message, HWND(0), 0, 0).0 != 0 {
             DispatchMessageA(&mut message);
         }
-
-        Ok(())
     }
 }
 

@@ -1,5 +1,5 @@
 use windows::{
-    runtime::*,
+    core::*,
     Graphics::Imaging::BitmapDecoder,
     Media::Ocr::OcrEngine,
     Storage::{FileAccessMode, StorageFile},

@@ -7,9 +7,9 @@ edition = "2018"
 array-init = "2.0.0"
 
 [dependencies.windows]
-version = "0.26"
+version = "0.27"
 features = [
-    "std",
+    "alloc",
     "Win32_Foundation",
     "Win32_Graphics_Direct3D_Fxc",
     "Win32_Graphics_Direct3D12",
