@@ -1,5 +1,5 @@
 use windows::{
-    runtime::*, Foundation::Numerics::*, Win32::Foundation::*,
+    core::*, Foundation::Numerics::*, Win32::Foundation::*,
     Win32::Graphics::Direct2D::Common::*, Win32::Graphics::Direct2D::*,
     Win32::Graphics::Direct3D::*, Win32::Graphics::Direct3D11::*, Win32::Graphics::Dxgi::Common::*,
     Win32::Graphics::Dxgi::*, Win32::Graphics::Gdi::*, Win32::System::Com::*,

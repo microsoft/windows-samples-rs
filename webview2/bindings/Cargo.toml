@@ -4,10 +4,10 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies]
-windows = { version = "0.26", features = ["build"] }
+windows = { version = "0.27", features = ["build"] }
 
 [build-dependencies]
-windows = { version = "0.26", features = ["build"] }
+windows = { version = "0.27", features = ["build"] }
 
 [features]
 default = ["std"]

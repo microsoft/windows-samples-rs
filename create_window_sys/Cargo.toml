@@ -3,10 +3,9 @@ name = "create-window"
 version = "0.0.0"
 edition = "2018"
 
-[dependencies.windows]
+[dependencies.windows-sys]
 version = "0.27"
 features = [
-    "std",
     "Win32_Foundation",
     "Win32_Graphics_Gdi",
     "Win32_System_LibraryLoader",
