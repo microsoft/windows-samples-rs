@@ -1,5 +1,5 @@
 use windows_sys::{
-    Win32::Foundation::*, Win32::Graphics::Gdi::*, Win32::Graphics::Gdi::ValidateRect,
+    Win32::Foundation::*, Win32::Graphics::Gdi::ValidateRect, Win32::Graphics::Gdi::*,
     Win32::System::LibraryLoader::GetModuleHandleA, Win32::UI::WindowsAndMessaging::*,
 };
 
@@ -29,7 +29,7 @@ fn main() {
         CreateWindowExA(
             WINDOW_EX_STYLE(0),
             window_class,
-            PSTR(b"This is a sample window".as_ptr()  as _),
+            PSTR(b"This is a sample window".as_ptr() as _),
             WINDOW_STYLE(WS_OVERLAPPEDWINDOW.0 | WS_VISIBLE.0),
             CW_USEDEFAULT,
             CW_USEDEFAULT,
