@@ -6,6 +6,6 @@ edition = "2018"
 [dependencies.windows]
 version = "0.27"
 features = [
-    "std",
+    "alloc",
     "Data_Xml_Dom",
 ]
