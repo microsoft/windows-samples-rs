@@ -3,7 +3,7 @@ mod bindings {
 }
 
 use bindings::Microsoft::Dia::*;
-use bindings::Windows::Win32::System::Com::*;
+use windows::Win32::System::Com::*;
 
 fn main() -> windows::core::Result<()> {
     unsafe {

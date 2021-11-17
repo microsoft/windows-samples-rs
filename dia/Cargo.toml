@@ -4,21 +4,17 @@ version = "0.0.0"
 edition = "2018"
 
 [build-dependencies.windows]
-version = "0.27"
+git = "https://github.com/microsoft/windows-rs"
 features = [
     "build"
 ]
 
 [dependencies.windows]
-version = "0.27"
+git = "https://github.com/microsoft/windows-rs"
 features = [
-    "build"
+    "std",
+    "alloc",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Ole",
+    "Win32_Foundation"
 ]
-
-# Can switch to pre-generated bindings and clean this up as soon as
-# https://github.com/microsoft/windows-rs/pull/1336 work is complete
-
-[features]
-std = []
-alloc = []
-default = ["std", "alloc"]
