@@ -9,14 +9,13 @@ use std::{
 
 use serde::Deserialize;
 use serde_json::{Number, Value};
-use windows::core::*;
 
-use bindings::{
-    Microsoft::Web::WebView2::Core::*, Windows::Foundation::*, Windows::Win32::Foundation::*,
-    Windows::Win32::Graphics::Gdi::*, Windows::Win32::System::Com::*,
-    Windows::Win32::System::LibraryLoader::*, Windows::Win32::System::Threading::*,
-    Windows::Win32::UI::HiDpi::*, Windows::Win32::UI::Input::KeyboardAndMouse::*,
-    Windows::Win32::UI::WindowsAndMessaging::*,
+use bindings::Microsoft::Web::WebView2::Core::*;
+
+use windows::{
+    core::*, Foundation::*, Win32::Foundation::*, Win32::Graphics::Gdi::*, Win32::System::Com::*,
+    Win32::System::LibraryLoader::*, Win32::System::Threading::*, Win32::UI::HiDpi::*,
+    Win32::UI::Input::KeyboardAndMouse::*, Win32::UI::WindowsAndMessaging::*,
 };
 
 fn main() -> Result<()> {
