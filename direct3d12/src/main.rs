@@ -215,25 +215,13 @@ fn get_hardware_adapter(factory: &IDXGIFactory4) -> Result<IDXGIAdapter1> {
             continue;
         }
 
-        // We need the variant where we pass in NULL for the outparam.
-        #[link(name = "d3d12")]
-        extern "system" {
-            pub fn D3D12CreateDevice(
-                padapter: ::windows::core::RawPtr,
-                minimumfeaturelevel: D3D_FEATURE_LEVEL,
-                riid: *const ::windows::core::GUID,
-                ppdevice: *mut *mut ::std::ffi::c_void,
-            ) -> ::windows::core::HRESULT;
-        }
-
         // Check to see whether the adapter supports Direct3D 12, but don't
         // create the actual device yet.
         if unsafe {
             D3D12CreateDevice(
-                std::mem::transmute_copy(&adapter),
+                &adapter,
                 D3D_FEATURE_LEVEL_11_0,
-                &ID3D12Device::IID,
-                std::ptr::null_mut(),
+                std::ptr::null_mut::<Option<ID3D12Device>>(),
             )
         }
         .is_ok()
