@@ -1,8 +1,6 @@
-mod bindings {
-    windows::core::include_bindings!();
-}
+windows::core::include_bindings!();
 
-use bindings::Microsoft::Dia::*;
+use Microsoft::Dia::*;
 use windows::Win32::System::Com::*;
 
 fn main() -> windows::core::Result<()> {
