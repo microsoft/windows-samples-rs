@@ -5,8 +5,20 @@ edition = "2018"
 
 [build-dependencies.windows]
 version = "0.27"
-features = ["build"]
+features = [
+    "build"
+]
 
 [dependencies.windows]
 version = "0.27"
-features = ["build"]
+features = [
+    "build"
+]
+
+# Can switch to pre-generated bindings and clean this up as soon as
+# https://github.com/microsoft/windows-rs/pull/1336 work is complete
+
+[features]
+std = []
+alloc = []
+default = ["std", "alloc"]
