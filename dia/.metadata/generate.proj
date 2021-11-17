@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Project Sdk="Microsoft.Windows.WinmdGenerator/0.15.2-preview">
+
+    <PropertyGroup Label="Globals">
+        <OutputWinmd>../.windows/winmd/Microsoft.Dia.winmd</OutputWinmd>
+        <WinmdVersion>0.0.0.0</WinmdVersion>
+        <DiaSdkRoot>$(VsInstallDir)\DIA SDK</DiaSdkRoot>
+        <DiaIdlRoot>$(DiaSdkRoot)\idl</DiaIdlRoot>
+        <DiaIncRoot>$(DiaSdkRoot)\include</DiaIncRoot>
+        <AdditionalIncludes>$(CompiledHeadersDir);$(DiaIncRoot)</AdditionalIncludes>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Idls Include="$(DiaIdlRoot)\dia2.idl"/>
+        <Headers Include="$(CompiledHeadersDir)\dia2.h;$(DiaIncRoot)\cvconst.h"/>
+        <Partition Include="main.cpp">
+            <TraverseFiles>@(Headers)</TraverseFiles>
+            <Namespace>Microsoft.Dia</Namespace>
+            <ExcludeFromCrossarch>true</ExcludeFromCrossarch>
+        </Partition>
+    </ItemGroup>
+
+</Project>

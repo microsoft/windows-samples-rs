@@ -1,0 +1,4 @@
+--remap
+SymTagEnum=SymTag
+--exclude
+SymTagEnum
