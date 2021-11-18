@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies.windows]
-path = "/git/windows-rs"
+git = "https://github.com/microsoft/windows-rs"
 features = [
     "ApplicationModel_DataTransfer",
     "Foundation_Collections",
@@ -14,7 +14,7 @@ features = [
 ]
 
 [build-dependencies]
-windows = { path = "/git/windows-rs", features = ["build"] }
+windows = { git = "https://github.com/microsoft/windows-rs", features = ["build"] }
 
 [features]
 default = ["std", "alloc"]

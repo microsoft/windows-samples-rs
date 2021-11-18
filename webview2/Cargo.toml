@@ -3,13 +3,8 @@ name = "sample"
 version = "0.0.0"
 edition = "2018"
 
-[dependencies]
-bindings = { path = "bindings" }
-serde = { version = "1.0.125", features = ["derive"] }
-serde_json = "1.0.64"
-
 [dependencies.windows]
-path = "/git/windows-rs"
+git = "https://github.com/microsoft/windows-rs"
 features = [
     "alloc",
     "Win32_Foundation",
@@ -21,3 +16,8 @@ features = [
     "Win32_UI_Input_KeyboardAndMouse",
     "Win32_UI_WindowsAndMessaging",
 ]
+
+[dependencies]
+bindings = { path = "bindings" }
+serde = { version = "1.0.125", features = ["derive"] }
+serde_json = "1.0.64"
