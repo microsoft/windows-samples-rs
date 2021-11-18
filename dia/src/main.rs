@@ -1,7 +1,7 @@
 windows::core::include_bindings!();
 
-use Microsoft::Dia::*;
 use windows::Win32::System::Com::*;
+use Microsoft::Dia::*;
 
 fn main() -> windows::core::Result<()> {
     unsafe {
