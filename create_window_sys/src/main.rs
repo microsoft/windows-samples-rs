@@ -1,6 +1,6 @@
 use windows_sys::{
-    Win32::Graphics::Gdi::ValidateRect, Win32::System::LibraryLoader::GetModuleHandleA,
-    Win32::UI::WindowsAndMessaging::*,
+    Win32::Foundation::*, Win32::Graphics::Gdi::ValidateRect,
+    Win32::System::LibraryLoader::GetModuleHandleA, Win32::UI::WindowsAndMessaging::*,
 };
 
 fn main() {
@@ -49,7 +49,7 @@ fn main() {
     }
 }
 
-extern "system" fn wndproc(window: isize, message: u32, wparam: usize, lparam: isize) -> isize {
+extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     unsafe {
         match message as u32 {
             WM_PAINT => {
