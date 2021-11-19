@@ -3,11 +3,18 @@ name = "bindings"
 version = "0.0.0"
 edition = "2018"
 
-[dependencies]
-windows = { version = "0.27", features = ["build"] }
+[dependencies.windows]
+git = "https://github.com/microsoft/windows-rs"
+features = [
+    "ApplicationModel_DataTransfer",
+    "Foundation_Collections",
+    "Foundation_Numerics",
+    "Storage_Streams",
+    "UI_Core",
+]
 
 [build-dependencies]
-windows = { version = "0.27", features = ["build"] }
+windows = { git = "https://github.com/microsoft/windows-rs", features = ["build"] }
 
 [features]
 default = ["std", "alloc"]
