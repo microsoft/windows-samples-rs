@@ -1,4 +1,4 @@
-use windows_sys::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW};
+use windows_sys::{Win32::Foundation::*, Win32::UI::WindowsAndMessaging::*};
 
 fn main() {
     unsafe {
@@ -6,7 +6,7 @@ fn main() {
     }
 }
 
-extern "system" fn enum_window(window: isize, _: isize) -> i32 {
+extern "system" fn enum_window(window: HWND, _: LPARAM) -> BOOL {
     unsafe {
         let mut text: [u16; 512] = [0; 512];
         let len = GetWindowTextW(window, text.as_mut_ptr(), text.len() as i32);
