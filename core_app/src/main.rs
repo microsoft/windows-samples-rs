@@ -1,7 +1,6 @@
 #![windows_subsystem = "windows"]
 
-use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
-use windows::{core::*, ApplicationModel::Core::*, UI::Core::*};
+use windows::{core::*, ApplicationModel::Core::*, UI::Core::*, Win32::System::Com::*};
 
 use windows as Windows;
 
