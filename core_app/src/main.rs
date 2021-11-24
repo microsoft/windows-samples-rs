@@ -1,6 +1,6 @@
 #![windows_subsystem = "windows"]
 
-use windows::{core::*, ApplicationModel::Core::*, UI::Core::*};
+use windows::{core::*, ApplicationModel::Core::*, Win32::System::Com::*, UI::Core::*};
 
 use windows as Windows;
 
@@ -48,6 +48,10 @@ impl CoreAppView {
 }
 
 fn main() -> Result<()> {
+    unsafe {
+        CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+    }
+
     let app: IFrameworkViewSource = CoreApp().into();
     CoreApplication::Run(app)?;
     Ok(())
