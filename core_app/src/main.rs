@@ -1,5 +1,6 @@
 #![windows_subsystem = "windows"]
 
+use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
 use windows::{core::*, ApplicationModel::Core::*, UI::Core::*};
 
 use windows as Windows;
@@ -48,6 +49,10 @@ impl CoreAppView {
 }
 
 fn main() -> Result<()> {
+    unsafe {
+        CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+    }
+
     let app: IFrameworkViewSource = CoreApp().into();
     CoreApplication::Run(app)?;
     Ok(())
