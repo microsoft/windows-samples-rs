@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies.windows]
-version = "0.27"
+version = "0.29"
 features = [
     "build",
     "ApplicationModel_Core",

@@ -211,7 +211,7 @@ impl WebView {
         let controller = {
             environment
                 .CreateCoreWebView2ControllerAsync(
-                    CoreWebView2ControllerWindowReference::CreateFromWindowHandle(parent.0 as u64)?,
+                    CoreWebView2ControllerWindowReference::CreateFromWindowHandle(parent as u64)?,
                 )?
                 .SetCompleted(AsyncOperationCompletedHandler::new(move |op, _status| {
                     if let Some(op) = op.as_ref() {
@@ -341,9 +341,9 @@ impl WebView {
             }
 
             unsafe {
-                let result = GetMessageA(&mut msg, h_wnd, 0, 0).0;
+                let result = GetMessageA(&mut msg, h_wnd, 0, 0);
 
-                match result {
+                match result.0 {
                     -1 => break Err(windows::core::Error::from_win32().into()),
                     0 => break Ok(()),
                     _ => match msg.message {
@@ -456,7 +456,7 @@ impl WebView {
         self.tx.send(Box::new(f)).expect("send the fn");
 
         unsafe {
-            PostThreadMessageA(self.thread_id, WM_APP, WPARAM(0), LPARAM(0));
+            PostThreadMessageA(self.thread_id, WM_APP, 0, 0);
         }
         Ok(self)
     }
@@ -582,19 +582,19 @@ extern "system" fn window_proc(hwnd: HWND, msg: u32, w_param: WPARAM, l_param: L
                 })
                 .expect("call SetBounds");
             *frame.size.lock().expect("lock size") = size;
-            LRESULT(0)
+            0
         }
 
         WM_CLOSE => {
             unsafe {
                 DestroyWindow(hwnd);
             }
-            LRESULT(0)
+            0
         }
 
         WM_DESTROY => {
             webview.terminate().expect("window is gone");
-            LRESULT(0)
+            0
         }
 
         _ => unsafe { DefWindowProcA(hwnd, msg, w_param, l_param) },

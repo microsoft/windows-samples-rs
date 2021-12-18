@@ -50,7 +50,7 @@ where
     S: DXSample,
 {
     let instance = unsafe { GetModuleHandleA(None) };
-    debug_assert!(!instance.is_invalid());
+    debug_assert!(instance != 0);
 
     let wc = WNDCLASSEXA {
         cbSize: std::mem::size_of::<WNDCLASSEXA>() as u32,
@@ -100,7 +100,7 @@ where
             &mut sample as *mut _ as _,
         )
     };
-    debug_assert!(!hwnd.is_invalid());
+    debug_assert!(hwnd != 0);
 
     sample.bind_to_window(&hwnd)?;
 
@@ -127,11 +127,11 @@ where
 fn sample_wndproc<S: DXSample>(sample: &mut S, message: u32, wparam: WPARAM) -> bool {
     match message {
         WM_KEYDOWN => {
-            sample.on_key_down(wparam.0 as u8);
+            sample.on_key_down(wparam as u8);
             true
         }
         WM_KEYUP => {
-            sample.on_key_up(wparam.0 as u8);
+            sample.on_key_up(wparam as u8);
             true
         }
         WM_PAINT => {
@@ -687,7 +687,7 @@ mod d3d12_hello_triangle {
                         DestBlendAlpha: D3D12_BLEND_ZERO,
                         BlendOpAlpha: D3D12_BLEND_OP_ADD,
                         LogicOp: D3D12_LOGIC_OP_NOOP,
-                        RenderTargetWriteMask: D3D12_COLOR_WRITE_ENABLE_ALL.0 as u8,
+                        RenderTargetWriteMask: D3D12_COLOR_WRITE_ENABLE_ALL as u8,
                     },
                     D3D12_RENDER_TARGET_BLEND_DESC::default(),
                     D3D12_RENDER_TARGET_BLEND_DESC::default(),
