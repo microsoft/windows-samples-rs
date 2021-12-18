@@ -6,7 +6,7 @@ use windows::{
 fn main() -> Result<()> {
     unsafe {
         let instance = GetModuleHandleA(None);
-        debug_assert!(instance.0 != 0);
+        debug_assert!(instance != 0);
 
         let window_class = "window";
 
@@ -40,7 +40,7 @@ fn main() -> Result<()> {
 
         let mut message = MSG::default();
 
-        while GetMessageA(&mut message, HWND(0), 0, 0).into() {
+        while GetMessageA(&mut message, 0, 0, 0).into() {
             DispatchMessageA(&mut message);
         }
 
@@ -54,12 +54,12 @@ extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: L
             WM_PAINT => {
                 println!("WM_PAINT");
                 ValidateRect(window, std::ptr::null());
-                LRESULT(0)
+                0
             }
             WM_DESTROY => {
                 println!("WM_DESTROY");
                 PostQuitMessage(0);
-                LRESULT(0)
+                0
             }
             _ => DefWindowProcA(window, message, wparam, lparam),
         }
