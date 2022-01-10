@@ -84,7 +84,7 @@ impl Window {
         };
 
         Ok(Window {
-            handle: 0,
+            handle: HWND(0),
             factory,
             dxfactory,
             style,
@@ -347,17 +347,17 @@ impl Window {
                     BeginPaint(self.handle, &mut ps);
                     self.render().unwrap();
                     EndPaint(self.handle, &ps);
-                    0
+                    LRESULT(0)
                 }
                 WM_SIZE => {
-                    if wparam != SIZE_MINIMIZED as usize {
+                    if wparam.0 != SIZE_MINIMIZED as usize {
                         self.resize_swapchain_bitmap().unwrap();
                     }
-                    0
+                    LRESULT(0)
                 }
                 WM_DISPLAYCHANGE => {
                     self.render().unwrap();
-                    0
+                    LRESULT(0)
                 }
                 WM_USER => {
                     if self.present(0, DXGI_PRESENT_TEST).is_ok() {
@@ -365,15 +365,15 @@ impl Window {
                         self.occlusion = 0;
                         self.visible = true;
                     }
-                    0
+                    LRESULT(0)
                 }
                 WM_ACTIVATE => {
                     self.visible = true; // TODO: unpack !HIWORD(wparam);
-                    0
+                    LRESULT(0)
                 }
                 WM_DESTROY => {
                     PostQuitMessage(0);
-                    0
+                    LRESULT(0)
                 }
                 _ => DefWindowProcA(self.handle, message, wparam, lparam),
             }
@@ -383,7 +383,7 @@ impl Window {
     fn run(&mut self) -> Result<()> {
         unsafe {
             let instance = GetModuleHandleA(None);
-            debug_assert!(instance != 0);
+            debug_assert!(instance.0 != 0);
 
             let wc = WNDCLASSA {
                 hCursor: LoadCursorW(None, IDC_HAND),
@@ -413,7 +413,7 @@ impl Window {
                 self as *mut _ as _,
             );
 
-            debug_assert!(handle != 0);
+            debug_assert!(handle.0 != 0);
             debug_assert!(handle == self.handle);
             let mut message = MSG::default();
 
@@ -448,7 +448,7 @@ impl Window {
     ) -> LRESULT {
         unsafe {
             if message == WM_NCCREATE {
-                let cs = lparam as *const CREATESTRUCTA;
+                let cs = lparam.0 as *const CREATESTRUCTA;
                 let this = (*cs).lpCreateParams as *mut Self;
                 (*this).handle = window;
 

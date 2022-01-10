@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies.windows]
-version = "0.29"
+version = "0.30"
 features = [
     "ApplicationModel_DataTransfer",
     "Foundation_Collections",
@@ -14,7 +14,7 @@ features = [
 ]
 
 [build-dependencies]
-windows = { version = "0.29", features = ["build"] }
+windows = { version = "0.30", features = ["build"] }
 
 [features]
 default = ["std", "alloc"]
