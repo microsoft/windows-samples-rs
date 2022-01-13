@@ -4,7 +4,7 @@ use windows::{
 };
 
 fn main() -> windows::core::Result<()> {
-    unsafe { EnumWindows(Some(enum_window), 0).ok() }
+    unsafe { EnumWindows(Some(enum_window), LPARAM(0)).ok() }
 }
 
 extern "system" fn enum_window(window: HWND, _: LPARAM) -> BOOL {

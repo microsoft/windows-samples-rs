@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2018"
 
 [dependencies.windows]
-version = "0.29"
+version = "0.30"
 features = [
     "Foundation",
     "Win32_System_WinRT",
