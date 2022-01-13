@@ -6,7 +6,6 @@ edition = "2018"
 [dependencies.windows]
 version = "0.30"
 features = [
-    "std",
     "build",
     "ApplicationModel_Activation",
     "Win32_System_Com",

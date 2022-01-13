@@ -17,6 +17,5 @@ features = [
 windows = { version = "0.30", features = ["build"] }
 
 [features]
-default = ["std", "alloc"]
-std = []
+default = ["alloc"]
 alloc = []
