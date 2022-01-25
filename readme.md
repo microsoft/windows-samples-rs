@@ -1,3 +1,3 @@
-## Rust language samples for Windows
+Samples are now available directly on the windows-rs repo (in the `/crates/samples` folder):
 
-The repo contains samples for use with the [windows](https://github.com/microsoft/windows-rs) crate.
+https://github.com/microsoft/windows-rs
